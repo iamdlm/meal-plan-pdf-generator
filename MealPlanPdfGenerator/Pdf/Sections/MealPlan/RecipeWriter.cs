@@ -132,7 +132,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             cell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
 
             // Add SVG icon
-            byte[] svgBytes = System.IO.File.ReadAllBytes(System.IO.Path.Combine("wwwroot", "svg", svgFileName));
+            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", svgFileName));
             MemoryStream svgStream = new MemoryStream(svgBytes);
             Image svgImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
             svgImage.SetHeight(20);
