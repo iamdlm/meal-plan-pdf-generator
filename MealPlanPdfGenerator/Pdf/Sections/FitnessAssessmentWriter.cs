@@ -9,8 +9,6 @@ namespace MealPlanPdfGenerator.Pdf.Sections
     {
         public static void Write(Document doc, int age, double weight, double height, string activityLevel)
         {
-            doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-
             // Calculate necessary values
             double bmi = CalculateBMI(weight, height);
             int maintenanceCalories = CalculateMaintenanceCalories(age, weight, height, activityLevel);

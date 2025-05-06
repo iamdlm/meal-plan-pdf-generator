@@ -14,24 +14,22 @@ namespace MealPlanPdfGenerator.Pdf.Sections
         {
             int dayCount = 1;
 
-            foreach (var day in form.MealPlan.Days)
-            {
-                WriteDayMenu(pdfDoc, doc, day, dayCount);
+            // for demo purposes use just one meal
+            var day = form.MealPlan.Days.FirstOrDefault();
 
-                foreach (var meal in day.Meals)
-                {
-                    // Create a new page for each meal
-                    PdfFormatUtils.AddSectionBreak(doc);
+            WriteDayMenu(pdfDoc, doc, day, dayCount);
 
-                    // Add title section
-                    PdfHeaderFormatter.AddHeader(doc, meal.Title);
+            // for demo purposes use just one meal
+            var meal = day.Meals.FirstOrDefault();
 
-                    // Write the recipe using the specialized RecipeWriter
-                    RecipeWriter.WriteRecipe(pdfDoc, doc, meal, day.Calories);
-                }
+            // Create a new page for each meal
+            PdfFormatUtils.AddSectionBreak(doc);
 
-                dayCount++;
-            }
+            // Add title section
+            PdfHeaderFormatter.AddHeader(doc, meal.Title);
+
+            // Write the recipe using the specialized RecipeWriter
+            RecipeWriter.WriteRecipe(pdfDoc, doc, meal, day.Calories);
         }
 
         private static void WriteDayMenu(PdfDocument pdfDoc, Document doc, Day day, int dayCount)
