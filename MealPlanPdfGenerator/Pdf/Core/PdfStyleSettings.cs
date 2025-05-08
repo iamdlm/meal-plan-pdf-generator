@@ -20,6 +20,7 @@ namespace MealPlanPdfGenerator.Pdf.Core
         public static readonly Color MealTextColor = new DeviceRgb(182, 161, 114);
         public static readonly Color MealDividerTextColor = new DeviceRgb(223, 214, 195);
         public static readonly Color RecipeHeaderColor = new DeviceRgb(233, 227, 214);
+        public static readonly Color TableColor = new DeviceRgb(247, 245, 241);
 
         // Font Sizes
         public static readonly int HeaderFontSize = 24;

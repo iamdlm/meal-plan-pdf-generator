@@ -37,6 +37,7 @@ namespace MealPlanPdfGenerator.Pdf
 
             // Set font
             document.SetFont(PdfStyleSettings.BodyFont);
+            document.SetMargins(40, 60, 40, 60);
 
             // Following pages with meal plan details
             MealPlanWriter.Write(pdfDoc, document, form);
