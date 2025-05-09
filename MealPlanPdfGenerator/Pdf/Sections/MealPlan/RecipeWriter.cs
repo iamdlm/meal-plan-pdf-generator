@@ -199,7 +199,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                 .SetBorder(Border.NO_BORDER);
 
-            Table mainContent = new Table(UnitValue.CreatePointArray(new float[] { 36f, 120f }));
+            Table mainContent = new Table(UnitValue.CreatePointArray(new float[] { 36f, 140f }));
             mainContent.AddCell(iconCell);
             mainContent.AddCell(descriptionCell);
 

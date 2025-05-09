@@ -18,7 +18,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             AddTitle(doc);
 
             // Create main content container
-            float[] columnWidths = { 1, 0.1f, 1 };
+            float[] columnWidths = { 1, 0.25f, 1 };
             Table mainContent = new Table(UnitValue.CreatePercentArray(columnWidths));
             mainContent.SetWidth(UnitValue.CreatePercentValue(100));
 
