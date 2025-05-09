@@ -18,15 +18,15 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             AddTitle(doc);
 
             // Create main content container
-            float[] columnWidths = { 1, 0.25f, 1 };
+            float[] columnWidths = { 1, 0.1f, 1 };
             Table mainContent = new Table(UnitValue.CreatePercentArray(columnWidths));
             mainContent.SetWidth(UnitValue.CreatePercentValue(100));
 
             // Left column content
-            Cell leftColumn = new Cell().SetBorder(Border.NO_BORDER);
+            Cell leftColumn = new Cell().SetPadding(0).SetBorder(Border.NO_BORDER);
 
             // Right column content
-            Cell rightColumn = new Cell().SetBorder(Border.NO_BORDER);
+            Cell rightColumn = new Cell().SetPadding(0).SetBorder(Border.NO_BORDER); ;
 
             mainContent.AddCell(leftColumn);
             mainContent.AddCell(new Cell().SetBorder(Border.NO_BORDER));
@@ -261,19 +261,12 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             table.SetBorder(new SolidBorder(1));
             table.AddCell(CreateDescHeaderCell("BMI Range"));
             table.AddCell(CreateValueHeaderCell("Classification"));
+            var bmiClassifications = Enum.GetValues(typeof(BmiClassification)).Cast<BmiClassification>().ToList();
 
-            string[][] data =
+            foreach (var bmiClassification in bmiClassifications)
             {
-                new[] { "18.5 or less", "Underweight" },
-                new[] { "18.5 - 24.99", "Normal Weight" },
-                new[] { "25 - 29.99", "Overweight" },
-                new[] { "30+", "Obese" }
-            };
-
-            foreach (var row in data)
-            {
-                table.AddCell(CreateDescCell(row[0]));
-                table.AddCell(CreateValueCell(row[1]));
+                table.AddCell(CreateDescCell(GetBmiRangeText(bmiClassification)));
+                table.AddCell(CreateValueCell(GetBmiClassificationText(bmiClassification)));
             }
 
             return table;
@@ -411,10 +404,28 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             return "";
         }
 
+        private static string GetBmiRangeText(BmiClassification classification)
+        {
+            switch (classification)
+            {
+                case BmiClassification.Underweight:
+                    return "18.5 or less";
+                case BmiClassification.NormalWeight:
+                    return "18.5 - 24.99";
+                case BmiClassification.Overweight:
+                    return "25 - 29.99";
+                case BmiClassification.Obese:
+                    return "30+";
+            }
+
+            return "";
+        }
+
         private static Paragraph CreateSubSectionParagraph()
         {
             return new Paragraph()
                 .SetFont(PdfStyleSettings.BodyFont)
+                .SetTextAlignment(TextAlignment.JUSTIFIED)
                 .SetFixedLeading(16);
         }
 
