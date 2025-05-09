@@ -17,9 +17,6 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             // Add title
             AddTitle(doc, meal);
 
-            // Add summary
-            AddSummary(doc, meal);
-
             // Add recipe information header
             AddRecipeInformation(pdfDoc, doc, meal);
 
@@ -33,10 +30,10 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             leftColumn.SetBorder(Border.NO_BORDER);
 
             // Add ingredients
-            AddIngredients(leftColumn, meal);
+            AddIngredients(pdfDoc, leftColumn, meal);
 
             // Add preparation steps
-            AddPreparationSteps(leftColumn, meal);
+            AddPreparationSteps(pdfDoc, leftColumn, meal);
 
             mainContent.AddCell(leftColumn);
 
@@ -61,7 +58,8 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
 
             Paragraph header = new Paragraph()
                 .SetFontSize(54)
-                .SetFixedLeading(54);
+                .SetFixedLeading(54)
+                .SetMarginBottom(10);
 
             header.Add(new Text(highlightedTitle.ToUpper()).SetFont(PdfStyleSettings.TitleBoldFont));
             if (!string.IsNullOrEmpty(nonHighlightedTitle))
@@ -72,24 +70,23 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             doc.Add(header);
         }
 
-        private static void AddSummary(Document doc, Meal meal)
+        private static void AddIngredients(PdfDocument pdfDoc, Cell container, Meal meal)
         {
-            Paragraph summary = new Paragraph(meal.Summary)
-                .SetFontSize(12)
-                .SetMarginBottom(14);
+            AddSubSectionHeader(pdfDoc, container, "INGREDIENTS");
 
-            doc.Add(summary);
-        }
-
-        private static void AddIngredients(Cell container, Meal meal)
-        {
-            AddSubSectionHeader(container, "INGREDIENTS");
+            // bullet
+            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", "circle.svg"));
+            MemoryStream svgStream = new MemoryStream(svgBytes);
+            Image bulletImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
+            bulletImage.SetHeight(5)
+                .SetWidth(5)
+                .SetMarginBottom(3);
 
             List ingredients = new List()
                 .SetMarginLeft(5)
                 .SetFont(PdfStyleSettings.BodyFont)
                 .SetFontSize(14)
-                .SetListSymbol("•")
+                .SetListSymbol(bulletImage)
                 .SetSymbolIndent(8)
                 .SetMarginBottom(20);
 
@@ -103,9 +100,9 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             container.Add(ingredients);
         }
 
-        private static void AddPreparationSteps(Cell container, Meal meal)
+        private static void AddPreparationSteps(PdfDocument pdfDoc, Cell container, Meal meal)
         {
-            AddSubSectionHeader(container, "DIRECTIONS");
+            AddSubSectionHeader(pdfDoc, container, "DIRECTIONS");
 
             List steps = new List(ListNumberingType.DECIMAL)
                 .SetMarginLeft(5)
@@ -122,12 +119,22 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             container.Add(steps);
         }
 
-        private static void AddSubSectionHeader(Cell container, string title)
+        private static void AddSubSectionHeader(PdfDocument pdfDoc, Cell container, string title)
         {
-            Paragraph header = new Paragraph(title)
+            // bullet
+            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", "bullet.svg"));
+            MemoryStream svgStream = new MemoryStream(svgBytes);
+            Image bulletImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
+            bulletImage.SetHeight(14)
+                .SetWidth(20);
+
+            Paragraph header = new Paragraph()
+                .Add(bulletImage)
+                .Add($" {title}")
                 .SetFont(PdfStyleSettings.TitleFont)
                 .SetFontSize(16)
                 .SetFontColor(PdfStyleSettings.MealTextColor);
+
             container.Add(header);
         }
 
