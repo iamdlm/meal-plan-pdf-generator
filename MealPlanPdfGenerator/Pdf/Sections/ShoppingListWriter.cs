@@ -106,9 +106,9 @@ namespace MealPlanPdfGenerator.Pdf.Sections
 
         private static void AddShoppingListPerCategoryTable(Table table, ShoppingListPerCategory shoppingListPerCategory, int column, int maxRows)
         {
-            Table categoryTable = new Table(UnitValue.CreatePercentArray(new float[] { 10f, 88f, 5f })).UseAllAvailableWidth();
+            Table categoryTable = new Table(1).UseAllAvailableWidth();
 
-            categoryTable.AddHeaderCell(new Cell(1, 3).Add(
+            categoryTable.AddHeaderCell(new Cell().Add(
                 new Paragraph(shoppingListPerCategory.Category.ToUpper())
                     .SetFont(PdfStyleSettings.TitleFont)
                     .SetFontSize(14)
@@ -123,13 +123,15 @@ namespace MealPlanPdfGenerator.Pdf.Sections
                 {
                     var item = shoppingListPerCategory.Items[j];
 
+                    Table itemTable = new Table(UnitValue.CreatePercentArray(new float[] { 10f, 88f, 5f })).UseAllAvailableWidth();
+
                     // Add checkbox
                     Div checkbox = new Div();
                     checkbox.SetWidth(10);
                     checkbox.SetHeight(10);
                     checkbox.SetBackgroundColor(ColorConstants.WHITE);
 
-                    categoryTable.AddCell(new Cell().Add(checkbox)
+                    itemTable.AddCell(new Cell().Add(checkbox)
                         .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
                         .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                         .SetHorizontalAlignment(HorizontalAlignment.CENTER)
@@ -145,23 +147,30 @@ namespace MealPlanPdfGenerator.Pdf.Sections
                         .SetBorder(Border.NO_BORDER)
                         .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor);
 
-                    if (j > 0)
+                    if (j < maxRows - 1) // dont draw border in last item
                     {
-                        quantityCell.SetBorderTop(new SolidBorder(ColorConstants.WHITE, 1));
+                        quantityCell.SetBorderBottom(new SolidBorder(ColorConstants.WHITE, 1));
                     }
 
-                    categoryTable.AddCell(quantityCell);
+                    itemTable.AddCell(quantityCell);
+
+                    itemTable.AddCell(new Cell()
+                        .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
+                        .SetBorder(Border.NO_BORDER));
 
                     categoryTable.AddCell(new Cell()
+                        .Add(itemTable)
                         .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
+                        .SetPadding(0)
                         .SetBorder(Border.NO_BORDER));
                 }
                 else
                 {
-                    categoryTable.AddCell(new Cell(1, 3)
+                    categoryTable.AddCell(new Cell()
                             .SetHeight(17)
                             .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
                             .SetBorder(Border.NO_BORDER));
+
                 }
             }
 
