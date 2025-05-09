@@ -42,11 +42,11 @@ namespace MealPlanPdfGenerator.Pdf
             // Following pages with meal plan details
             MealPlanWriter.Write(pdfDoc, document, form);
 
-            // Fitness assessment
-            FitnessAssessmentWriter.Write(document, form.Age, form.WeightKg, form.Height, form.Activity.ToString());
-
             // Write the shopping list
             ShoppingListWriter.Write(document, form.MealPlan.ShoppingList);
+
+            // Fitness assessment
+            FitnessAssessmentWriter.Write(document, form.Age, form.WeightKg, form.Height, form.Activity.ToString());
 
             // Close the document
             document.Close();
