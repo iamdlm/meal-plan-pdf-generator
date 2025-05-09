@@ -163,7 +163,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
 
             Paragraph paragraph = new Paragraph()
                 .Add(new Text($"Based on your stats, the best estimate for your maintenance calories is"))
-                .Add(new Text($" {maintenanceCalories.ToStringWithThousandSeparator()} calories").SetFont(PdfStyleSettings.BodyBoldFont))
+                .Add(new Text($" {PdfFormatUtils.FormatWithThousandSeparator(maintenanceCalories)} calories").SetFont(PdfStyleSettings.BodyBoldFont))
                 .Add(new Text(" per day,"))
                 .Add(new Text(" based on the Katch-McArdle Formula").SetFont(PdfStyleSettings.BodyBoldFont))
                 .Add(new Text(", which is widely known to be the most accurate when body fat is provided"))
@@ -174,7 +174,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             Table table = new Table(UnitValue.CreatePercentArray(new float[] { 48f, 4, 48f })).UseAllAvailableWidth();
 
             Cell caloriesPerDayCell = new Cell()
-                .Add(new Paragraph(maintenanceCalories.ToStringWithThousandSeparator())
+                .Add(new Paragraph(PdfFormatUtils.FormatWithThousandSeparator(maintenanceCalories))
                     .SetFont(PdfStyleSettings.TitleBoldFont)
                     .SetFontSize(14))
                 .Add(new Paragraph("calories per day"))
@@ -193,7 +193,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             table.AddCell(new Cell().SetWidth(10).SetBorder(Border.NO_BORDER));
 
             Cell caloriesPerWeekCell = new Cell()
-                .Add(new Paragraph(maintenanceCaloriesPerWeek.ToStringWithThousandSeparator())
+                .Add(new Paragraph(PdfFormatUtils.FormatWithThousandSeparator(maintenanceCaloriesPerWeek))
                     .SetFont(PdfStyleSettings.TitleBoldFont)
                     .SetFontSize(14))
                 .Add(new Paragraph("calories per week"))
@@ -249,7 +249,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
                 table.AddCell(CreateDescCell(levels[i]));
 
                 int caloriesPerDay = (int)(maintenanceCalories * multipliers[i]);
-                table.AddCell(CreateValueCell(caloriesPerDay.ToStringWithThousandSeparator()));
+                table.AddCell(CreateValueCell(PdfFormatUtils.FormatWithThousandSeparator(caloriesPerDay)));
             }
 
             return table;

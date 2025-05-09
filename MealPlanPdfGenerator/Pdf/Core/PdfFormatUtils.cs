@@ -86,7 +86,7 @@ namespace MealPlanPdfGenerator.Pdf.Core
             doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
         }
 
-        public static string ToStringWithThousandSeparator(this int value)
+        public static string FormatWithThousandSeparator(int value)
         {
             return value.ToString("N0");
         }
