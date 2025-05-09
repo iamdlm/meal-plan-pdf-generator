@@ -34,8 +34,8 @@ namespace MealPlanPdfGenerator.Pdf.Core
         private static readonly string TextFontPath = Path.Combine("wwwroot", "fonts", "Colaborate", "ColabReg.otf");
         private static readonly string TextBoldFontPath = Path.Combine("wwwroot", "fonts", "Colaborate", "ColabBol.otf");
         private static readonly string TitleFontPath = Path.Combine("wwwroot", "fonts", "BackwardsSans", "BackwardsSansRegular.otf");
-        private static readonly string TitleBoldFontPath = Path.Combine("wwwroot", "fonts", "BackwardsSans", "BackwardsSansBold.otf");
-        private static readonly string BodyFontPath = Path.Combine("wwwroot", "fonts", "Chocolates", "ChocolatesRegular.otf");
+        public static readonly string TitleBoldFontPath = Path.Combine("wwwroot", "fonts", "BackwardsSans", "BackwardsSansBold.otf");
+        public static readonly string BodyFontPath = Path.Combine("wwwroot", "fonts", "Chocolates", "ChocolatesRegular.otf");
         private static readonly string BodyBoldFontPath = Path.Combine("wwwroot", "fonts", "Chocolates", "ChocolatesBold.otf");
         private static readonly string BodyBoldItalicFontPath = Path.Combine("wwwroot", "fonts", "Chocolates", "ChocolatesBoldItalic.otf");
         private static readonly string BodyExtraBoldItalicFontPath = Path.Combine("wwwroot", "fonts", "Chocolates", "ChocolatesExtraBoldItalic.otf");

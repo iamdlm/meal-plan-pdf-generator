@@ -1,89 +1,255 @@
+using iText.IO.Image;
+using iText.Kernel.Colors;
+using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using iText.Svg.Converter;
+using MealPlanPdfGenerator.Pdf.Core;
+using MealPlanPdfGenerator.Pdf.ViewModels;
 
 namespace MealPlanPdfGenerator.Pdf.Sections
 {
     public static class FitnessAssessmentWriter
     {
-        public static void Write(Document doc, int age, double weight, double height, string activityLevel)
+        public static void Write(PdfDocument pdfDoc, Document doc, int age, double weight, double height, string activityLevel)
         {
+            AddTitle(doc);
+
+            // Create main content container
+            float[] columnWidths = { 1, 0.1f, 1 };
+            Table mainContent = new Table(UnitValue.CreatePercentArray(columnWidths));
+            mainContent.SetWidth(UnitValue.CreatePercentValue(100));
+
+            // Left column content
+            Cell leftColumn = new Cell().SetBorder(Border.NO_BORDER);
+
+            // Right column content
+            Cell rightColumn = new Cell().SetBorder(Border.NO_BORDER);
+
+            mainContent.AddCell(leftColumn);
+            mainContent.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+            mainContent.AddCell(rightColumn);
+
             // Calculate necessary values
             double bmi = CalculateBMI(weight, height);
             int maintenanceCalories = CalculateMaintenanceCalories(age, weight, height, activityLevel);
             double[] idealWeightRange = CalculateIdealWeightRange(height);
 
-            // Add title
-            Paragraph title = new Paragraph("Your Fitness Assessment")
+            AddImc(pdfDoc, leftColumn, bmi);
+
+            AddMaintenanceCalories(pdfDoc, leftColumn, maintenanceCalories);
+
+            AddMacrosDistribution(pdfDoc, leftColumn);
+
+            rightColumn.Add(CreateSubSectionParagraph()
+                .Add("People who use this simple tool from Amazon are usually in significantly better shape versus people who don’t.")
+                .SetMarginBottom(14));
+
+            rightColumn.Add(CreateBMITable()
+                .SetMarginBottom(14));
+
+            rightColumn.Add(CreateSubSectionParagraph()
+                .Add("The table below shows the difference if you were to\r\n have selected a different activity level.")
+                .SetMarginBottom(14));
+
+            rightColumn.Add(CreateActivityLevelTable(maintenanceCalories)
+                .SetMarginBottom(14));
+
+            doc.Add(mainContent);
+        }
+
+        private static void AddTitle(Document doc)
+        {
+            Paragraph mainTitle = new Paragraph("FITNESS ASSESSMENT")
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                 .SetTextAlignment(TextAlignment.CENTER)
-                .SetFontSize(20)
-                .SetBold();
-            doc.Add(title);
+                .SetFontSize(40)
+                .SetFont(PdfStyleSettings.TitleBoldFont)
+                .SetFixedLeading(40);
 
-            // Main table
-            Table mainTable = new Table(new float[] { 1, 2 }).UseAllAvailableWidth();
-            mainTable.SetBorder(new SolidBorder(1));
+            Paragraph subTitle = new Paragraph("Optimizing Physical Health While Managing EoE")
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontSize(26)
+                .SetFont(PdfStyleSettings.TitleFont)
+                .SetFixedLeading(26)
+                .SetMarginBottom(30);
 
-            // Left column: Maintenance Calories
-            Cell leftCell = new Cell(1, 1).SetBorder(new SolidBorder(1));
-            leftCell.Add(new Paragraph("Your\nMaintenance\nCalories").SetBold());
-            leftCell.Add(new Paragraph(maintenanceCalories.ToString()).SetFontSize(24).SetBold());
-            leftCell.Add(new Paragraph("calories per day"));
-            leftCell.Add(new Paragraph((maintenanceCalories * 7).ToString()).SetFontSize(18));
-            leftCell.Add(new Paragraph("calories per week"));
-            mainTable.AddCell(leftCell);
+            doc.Add(mainTitle);
+            doc.Add(subTitle);
+        }
 
-            // Right column: Explanation and Activity Levels
-            Cell rightCell = new Cell(1, 1).SetBorder(new SolidBorder(1));
-            rightCell.Add(new Paragraph($"Based on your stats, the best estimate for your maintenance calories is {maintenanceCalories} calories per day based on the Mifflin-St Jeor Formula, which is widely known to be the most accurate. The table below shows the difference if you were to have selected a different activity level."));
-            rightCell.Add(CreateActivityLevelTable(maintenanceCalories));
-            mainTable.AddCell(rightCell);
+        private static void AddImc(PdfDocument pdfDoc, Cell container, double bmi)
+        {
+            AddSubSectionHeader(container, "Your IMC");
 
-            doc.Add(mainTable);
+            BmiClassification bmiClassification = GetBMIClassification(bmi);
+            string bmiClassificationText = GetBmiClassificationText(bmiClassification);
 
-            // BMI and Ideal Weight section
-            Table bmiSection = new Table(2).UseAllAvailableWidth();
-            bmiSection.SetBorder(new SolidBorder(1));
+            Paragraph paragraph = CreateSubSectionParagraph()
+                .Add($"Your BMI is {bmi:F1}, which means you are classified as {bmiClassificationText}.");
 
-            // Ideal Weight
-            Cell idealWeightCell = new Cell().SetBorder(new SolidBorder(1));
-            idealWeightCell.Add(new Paragraph($"Ideal Weight: {idealWeightRange[0]:F1}-{idealWeightRange[1]:F1} kg")
-                .SetBold());
-            idealWeightCell.Add(new Paragraph("Your ideal body weight is estimated to be between " +
-                $"{idealWeightRange[0]:F1}-{idealWeightRange[1]:F1} kg based on various formulas. " +
-                "These formulas are based on your height and represent averages, so don't take them too seriously, especially if you lift weights."));
-            bmiSection.AddCell(idealWeightCell);
+            container.Add(paragraph);
 
-            // BMI
-            Cell bmiCell = new Cell().SetBorder(new SolidBorder(1));
-            bmiCell.Add(new Paragraph($"BMI Score: {bmi:F1}").SetBold());
-            bmiCell.Add(new Paragraph($"Your BMI is {bmi:F1}, which means you are classified as {GetBMIClassification(bmi)}."));
-            bmiCell.Add(CreateBMITable());
-            bmiSection.AddCell(bmiCell);
+            AddImcBmiIcon(pdfDoc, container, bmi);
+        }
 
-            doc.Add(bmiSection);
+        private static void AddImcBmiIcon(PdfDocument pdfDoc, Cell container, double bmi)
+        {
+            BmiClassification bmiClassification = GetBMIClassification(bmi);
+            string bmiClassificationText = GetBmiClassificationText(bmiClassification);
+            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", "bmi-obese.svg"));
+            MemoryStream svgStream = new MemoryStream(svgBytes);
+            Image bmiImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
 
-            // Macronutrients section
-            doc.Add(new Paragraph("Macronutrients").SetFontSize(16).SetBold());
-            doc.Add(new Paragraph($"These macronutrient values reflect your maintenance calories of {maintenanceCalories} calories per day."));
-            doc.Add(CreateMacronutrientTable(maintenanceCalories));
+            Table table = new Table(UnitValue.CreatePercentArray(new float[] { 30f, 5f, 65f })).UseAllAvailableWidth();
+
+            Cell iconCell = new Cell()
+                .SetBackgroundColor(PdfStyleSettings.RecipeHeaderColor)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetPaddingLeft(20)
+                .SetBorder(Border.NO_BORDER);
+
+            bmiImage.SetHeight(48)
+                .SetTextAlignment(TextAlignment.CENTER);
+            iconCell.Add(bmiImage);
+
+            table.AddCell(iconCell);
+
+            // separator column between bmi icon and bmi desc
+            table.AddCell(new Cell().SetWidth(5).SetBorder(Border.NO_BORDER));
+
+            Table bmiDescTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth();
+
+            bmiDescTable.AddCell(new Cell()
+                .Add(new Paragraph($"{bmi:F1}")
+                    .SetFont(PdfStyleSettings.BodyBoldFont)
+                    .SetFontSize(14))
+                .SetBorder(Border.NO_BORDER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetBorderBottom(new SolidBorder(ColorConstants.BLACK, 1)));
+
+            bmiDescTable.AddCell(new Cell()
+                .Add(new Paragraph(bmiClassificationText)
+                    .SetFont(PdfStyleSettings.BodyBoldFont)
+                    .SetFontSize(12))
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetBorder(Border.NO_BORDER));
+
+            Cell bmiDescCell = new Cell()
+                .Add(bmiDescTable)
+                .SetBackgroundColor(PdfStyleSettings.RecipeHeaderColor)
+                .SetBorder(Border.NO_BORDER)
+                .SetPaddings(5, 10, 5, 10);
+
+            table.AddCell(bmiDescCell);
+
+            Div iconDiv = new Div();
+            iconDiv.Add(table)
+                .SetPaddings(10, 20, 10, 20);
+
+            container.Add(iconDiv);
+        }
+
+        private static void AddMaintenanceCalories(PdfDocument pdfDoc, Cell container, int maintenanceCalories)
+        {
+            int maintenanceCaloriesPerWeek = 7 * maintenanceCalories;
+
+            AddSubSectionHeader(container, "Your Maintenance Calories");
+
+            Paragraph paragraph = new Paragraph()
+                .Add(new Text($"Based on your stats, the best estimate for your maintenance calories is"))
+                .Add(new Text($" {maintenanceCalories.ToStringWithThousandSeparator()} calories").SetFont(PdfStyleSettings.BodyBoldFont))
+                .Add(new Text(" per day,"))
+                .Add(new Text(" based on the Katch-McArdle Formula").SetFont(PdfStyleSettings.BodyBoldFont))
+                .Add(new Text(", which is widely known to be the most accurate when body fat is provided"))
+                .SetFont(PdfStyleSettings.BodyFont)
+                .SetFixedLeading(16)
+                .SetMarginBottom(8);
+
+            Table table = new Table(UnitValue.CreatePercentArray(new float[] { 48f, 4, 48f })).UseAllAvailableWidth();
+
+            Cell caloriesPerDayCell = new Cell()
+                .Add(new Paragraph(maintenanceCalories.ToStringWithThousandSeparator())
+                    .SetFont(PdfStyleSettings.TitleBoldFont)
+                    .SetFontSize(14))
+                .Add(new Paragraph("calories per day"))
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetBorder(Border.NO_BORDER)
+                .SetPaddings(10, 5, 10, 5);
+
+            caloriesPerDayCell.SetNextRenderer(new BackgroundImageCellRenderer(caloriesPerDayCell,
+                ImageDataFactory.Create(Path.Combine("wwwroot", "images", "rect-left.png"))));
+
+            table.AddCell(caloriesPerDayCell);
+
+            // separator column between bmi icon and bmi desc
+            table.AddCell(new Cell().SetWidth(10).SetBorder(Border.NO_BORDER));
+
+            Cell caloriesPerWeekCell = new Cell()
+                .Add(new Paragraph(maintenanceCaloriesPerWeek.ToStringWithThousandSeparator())
+                    .SetFont(PdfStyleSettings.TitleBoldFont)
+                    .SetFontSize(14))
+                .Add(new Paragraph("calories per week"))
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetBorder(Border.NO_BORDER)
+                .SetPaddings(10, 5, 10, 5);
+
+            caloriesPerWeekCell.SetNextRenderer(new BackgroundImageCellRenderer(caloriesPerWeekCell,
+                ImageDataFactory.Create(Path.Combine("wwwroot", "images", "rect-right.png"))));
+
+            table.AddCell(caloriesPerWeekCell)
+                .SetMarginBottom(10);
+
+            container.Add(paragraph);
+            container.Add(table);
+        }
+
+        private static void AddMacrosDistribution(PdfDocument pdfDoc, Cell container)
+        {
+            AddSubSectionHeader(container, "Your recommended macros distribution");
+
+            Paragraph paragraph = CreateSubSectionParagraph()
+                .Add("Ulamco laborum laboris duis ea laborum consectetur in aute incididunt ea proident. Do culpa qui magna dolore velit fugiat in eu laboris do occaecat.")
+                .SetMarginBottom(10);
+
+            container.Add(paragraph);
+
+            var carb = new MacroDistributionViewModel { Min = 40, Max = 50 };
+            var fat = new MacroDistributionViewModel { Min = 10, Max = 20 };
+            var protein = new MacroDistributionViewModel { Min = 30, Max = 50 };
+            var pieChartImageBytes = PdfDrawUtils.CreateMacrosDistributionPieChart(carb, fat, protein);
+
+            Image pieChartImage = new Image(ImageDataFactory.Create(pieChartImageBytes));
+            pieChartImage.SetAutoScale(true);
+
+            container.Add(pieChartImage);
         }
 
         private static Table CreateActivityLevelTable(int maintenanceCalories)
         {
             Table table = new Table(2).UseAllAvailableWidth();
             table.SetBorder(new SolidBorder(1));
-            table.AddCell(new Cell().Add(new Paragraph("Activity Level").SetBold()).SetBorder(new SolidBorder(1)));
-            table.AddCell(new Cell().Add(new Paragraph("Calories per Day").SetBold()).SetBorder(new SolidBorder(1)));
+            table.AddCell(CreateDescHeaderCell("Activity Level"));
+            table.AddCell(CreateValueHeaderCell("Calories per Day"));
 
             string[] levels = { "Basal Metabolic Rate", "Sedentary", "Light Exercise", "Moderate Exercise", "Heavy Exercise", "Athlete" };
             double[] multipliers = { 1.0, 1.2, 1.375, 1.55, 1.725, 1.9 };
 
             for (int i = 0; i < levels.Length; i++)
             {
-                table.AddCell(new Cell().Add(new Paragraph(levels[i])).SetBorder(new SolidBorder(1)));
-                table.AddCell(new Cell().Add(new Paragraph($"{(int)(maintenanceCalories * multipliers[i])}")).SetBorder(new SolidBorder(1)));
+                table.AddCell(CreateDescCell(levels[i]));
+
+                int caloriesPerDay = (int)(maintenanceCalories * multipliers[i]);
+                table.AddCell(CreateValueCell(caloriesPerDay.ToStringWithThousandSeparator()));
             }
 
             return table;
@@ -91,10 +257,10 @@ namespace MealPlanPdfGenerator.Pdf.Sections
 
         private static Table CreateBMITable()
         {
-            Table table = new Table(2).UseAllAvailableWidth();
+            Table table = new Table(UnitValue.CreatePointArray(new float[] { 100f, 100f, }));
             table.SetBorder(new SolidBorder(1));
-            table.AddCell(new Cell().Add(new Paragraph("BMI Range").SetBold()).SetBorder(new SolidBorder(1)));
-            table.AddCell(new Cell().Add(new Paragraph("Classification").SetBold()).SetBorder(new SolidBorder(1)));
+            table.AddCell(CreateDescHeaderCell("BMI Range"));
+            table.AddCell(CreateValueHeaderCell("Classification"));
 
             string[][] data =
             {
@@ -106,8 +272,8 @@ namespace MealPlanPdfGenerator.Pdf.Sections
 
             foreach (var row in data)
             {
-                table.AddCell(new Cell().Add(new Paragraph(row[0])).SetBorder(new SolidBorder(1)));
-                table.AddCell(new Cell().Add(new Paragraph(row[1])).SetBorder(new SolidBorder(1)));
+                table.AddCell(CreateDescCell(row[0]));
+                table.AddCell(CreateValueCell(row[1]));
             }
 
             return table;
@@ -136,6 +302,58 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             }
 
             return table;
+        }
+
+        private static void AddSubSectionHeader(Cell container, string title)
+        {
+            Paragraph paragraph = new Paragraph(title)
+                .SetFont(PdfStyleSettings.TitleBoldFont)
+                .SetCharacterSpacing(1)
+                .SetFontSize(12)
+                .SetBold();
+
+            container.Add(paragraph);
+        }
+
+        private static Cell CreateDescHeaderCell(string desc)
+        {
+            return new Cell()
+                .Add(new Paragraph(desc)
+                    .SetFont(PdfStyleSettings.TitleBoldFont)
+                    .SetFontSize(14))
+                .SetBackgroundColor(PdfStyleSettings.RecipeHeaderColor)
+                .SetBorder(new SolidBorder(1))
+                .SetPaddings(0, 10, 0, 10);
+        }
+
+        private static Cell CreateValueHeaderCell(string value)
+        {
+            return new Cell()
+                .Add(new Paragraph(value)
+                    .SetFont(PdfStyleSettings.BodyFont)
+                    .SetFontSize(12))
+                .SetBackgroundColor(PdfStyleSettings.RecipeHeaderColor)
+                .SetBorder(new SolidBorder(1))
+                .SetPaddings(4, 10, 0, 10);
+        }
+
+        private static Cell CreateDescCell(string desc)
+        {
+            return new Cell()
+                .Add(new Paragraph(desc))
+                .SetFontSize(10)
+                .SetPaddings(4, 10, 4, 10)
+                .SetBorder(new SolidBorder(1));
+        }
+
+        private static Cell CreateValueCell(string value)
+        {
+            return new Cell()
+                .Add(new Paragraph(value))
+                .SetPaddings(4, 10, 4, 10)
+                .SetFontSize(10)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetBorder(new SolidBorder(1));
         }
 
         private static double CalculateBMI(double weight, double height)
@@ -168,12 +386,44 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             return new[] { lower, upper };
         }
 
-        private static string GetBMIClassification(double bmi)
+        private static BmiClassification GetBMIClassification(double bmi)
         {
-            if (bmi < 18.5) return "Underweight";
-            if (bmi < 25) return "Normal Weight";
-            if (bmi < 30) return "Overweight";
-            return "Obese";
+            if (bmi < 18.5) return BmiClassification.Underweight;
+            if (bmi < 25) return BmiClassification.Underweight;
+            if (bmi < 30) return BmiClassification.Overweight;
+            return BmiClassification.Obese;
+        }
+
+        private static string GetBmiClassificationText(BmiClassification classification)
+        {
+            switch (classification)
+            {
+                case BmiClassification.Underweight:
+                    return "Underweight";
+                case BmiClassification.NormalWeight:
+                    return "Normal Weight";
+                case BmiClassification.Overweight:
+                    return "Overweight";
+                case BmiClassification.Obese:
+                    return "Obese";
+            }
+
+            return "";
+        }
+
+        private static Paragraph CreateSubSectionParagraph()
+        {
+            return new Paragraph()
+                .SetFont(PdfStyleSettings.BodyFont)
+                .SetFixedLeading(16);
+        }
+
+        private enum BmiClassification
+        {
+            Underweight,
+            NormalWeight,
+            Overweight,
+            Obese
         }
     }
-} 
+}

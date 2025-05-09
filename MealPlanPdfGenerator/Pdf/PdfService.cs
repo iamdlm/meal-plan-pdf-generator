@@ -46,7 +46,7 @@ namespace MealPlanPdfGenerator.Pdf
             ShoppingListWriter.Write(document, form.MealPlan.ShoppingList);
 
             // Fitness assessment
-            FitnessAssessmentWriter.Write(document, form.Age, form.WeightKg, form.Height, form.Activity.ToString());
+            FitnessAssessmentWriter.Write(pdfDoc, document, form.Age, form.WeightKg, form.Height, form.Activity.ToString());
 
             // Close the document
             document.Close();

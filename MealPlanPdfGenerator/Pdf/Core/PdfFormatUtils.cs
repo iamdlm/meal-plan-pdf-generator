@@ -1,8 +1,8 @@
+using iText.Kernel.Colors;
 using iText.Layout;
+using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
-using iText.Kernel.Colors;
-using iText.Layout.Borders;
 
 namespace MealPlanPdfGenerator.Pdf.Core
 {
@@ -85,5 +85,10 @@ namespace MealPlanPdfGenerator.Pdf.Core
         {
             doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
         }
+
+        public static string ToStringWithThousandSeparator(this int value)
+        {
+            return value.ToString("N0");
+        }
     }
-} 
+}

@@ -23,16 +23,18 @@ namespace MealPlanPdfGenerator.Pdf.Sections
 
             WriteDayMenu(pdfDoc, doc, day, dayCount);
 
-            // for demo purposes use just one meal
-            var meal = day.Meals.FirstOrDefault();
+            var meals = day.Meals;
 
-            // Create a new page for each meal
-            PdfFormatUtils.AddSectionBreak(doc);
+            foreach (var meal in meals)
+            {
+                // Create a new page for each meal
+                PdfFormatUtils.AddSectionBreak(doc);
 
-            AddMealDetailHeader(pdfDoc, doc, meal);
+                AddMealDetailHeader(pdfDoc, doc, meal);
 
-            // Write the recipe using the specialized RecipeWriter
-            RecipeWriter.WriteRecipe(pdfDoc, doc, meal, day.Calories);
+                // Write the recipe using the specialized RecipeWriter
+                RecipeWriter.WriteRecipe(pdfDoc, doc, meal, day.Calories);
+            }
 
             PdfFormatUtils.AddSectionBreak(doc);
         }

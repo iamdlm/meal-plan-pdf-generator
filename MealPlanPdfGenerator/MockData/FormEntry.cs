@@ -10,6 +10,8 @@ namespace MealPlanPdfGenerator.MockData
             {
                 Gender = "male",
                 Diet = 1,
+                WeightKg = 55,
+                Height = 170,
                 MealPlan = new MealPlan()
                 {
                     Days = new List<Day>()
