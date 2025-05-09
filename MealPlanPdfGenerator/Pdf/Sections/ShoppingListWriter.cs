@@ -154,7 +154,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
                 else
                 {
                     categoryTable.AddCell(new Cell(1, 3)
-                            .SetHeight(20)
+                            .SetHeight(17)
                             .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
                             .SetBorder(Border.NO_BORDER));
                 }
