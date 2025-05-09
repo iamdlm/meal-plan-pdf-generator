@@ -134,18 +134,23 @@ namespace MealPlanPdfGenerator.Pdf.Sections
                         .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                         .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                         .SetBorder(Border.NO_BORDER)
-                        .SetPaddings(2, 5, 2, 5));
+                        .SetPaddings(2, 5, 0, 5));
 
                     var formattedQuantity = FormatQuantity(item.Quantity);
-                    categoryTable.AddCell(
-                        new Cell().Add(new Paragraph()
-                                .Add($" {formattedQuantity} {item.Unit} {item.Name}")
-                                .SetFont(PdfStyleSettings.TitleFont)
-                                .SetFontSize(8))
-                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                            .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
-                            .SetBorder(Border.NO_BORDER)
-                            .SetBorderBottom(new SolidBorder(ColorConstants.WHITE, 1)));
+                    var quantityCell = new Cell().Add(new Paragraph()
+                            .Add($" {formattedQuantity} {item.Unit} {item.Name}")
+                            .SetFont(PdfStyleSettings.TitleFont)
+                            .SetFontSize(8))
+                        .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                        .SetBorder(Border.NO_BORDER)
+                        .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor);
+
+                    if (j > 0)
+                    {
+                        quantityCell.SetBorderTop(new SolidBorder(ColorConstants.WHITE, 1));
+                    }
+
+                    categoryTable.AddCell(quantityCell);
 
                     categoryTable.AddCell(new Cell()
                         .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
