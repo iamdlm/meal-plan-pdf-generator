@@ -10,7 +10,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
 {
     public static class ShoppingListWriter
     {
-        private static readonly int TotalColumn = 3;
+        private static readonly int TotalGroupPerRow = 3;
 
         public static void Write(Document doc, List<ShoppingList> shoppingList)
         {
@@ -40,7 +40,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             var groupedCategories = nonEmptyCategories
                 .OrderByDescending(category => category.Items.Count)
                 .Select((item, index) => new { Item = item, Index = index })
-                .GroupBy(x => x.Index / TotalColumn)
+                .GroupBy(x => x.Index / TotalGroupPerRow)
                 .Select(g => g.Select(x => x.Item).ToList())
                 .ToList();
 
@@ -67,117 +67,163 @@ namespace MealPlanPdfGenerator.Pdf.Sections
 
         private static void AddShoppingList(Document doc, List<List<ShoppingListPerCategory>> groupedCategories)
         {
-            int rowNumber = 0;
-            foreach (var group in groupedCategories)
+
+            // Create a table with 3 columns
+            int totalColumn = TotalGroupPerRow + (TotalGroupPerRow - 1);
+            var columnWidths = new List<float>();
+            for (int i = 0; i < TotalGroupPerRow; i++)
             {
-                // Create a table with 3 columns
-                Table table = new Table(UnitValue.CreatePercentArray(TotalColumn)).UseAllAvailableWidth();
-
-                // Remove all borders
-                table.SetBorder(Border.NO_BORDER);
-
-                int maxItems = group.Max(category => category.Items.Count);
-
-                // Add table headers (category names)                
-                for (int column = 0; column < TotalColumn; column++)
+                if (i > 0)
                 {
-                    if (column < group.Count)
-                    {
-                        var shoppingListPerCategory = group[column];
-
-                        AddShoppingListPerCategoryTable(table, shoppingListPerCategory, column, maxItems);
-                    }
-                    else
-                    {
-                        // add empty cell for row that has column less than 3
-                        table.AddCell(new Cell().Add(new Paragraph("")).SetBorder(Border.NO_BORDER));
-                    }
+                    columnWidths.Add(10f);
                 }
 
-                // Add the table to the document
-                doc.Add(table);
-
-                // Add some space between tables
-                doc.Add(new Paragraph("\n"));
-
-                rowNumber++;
+                columnWidths.Add(100f);
             }
+
+            Table table = new Table(UnitValue.CreatePercentArray(columnWidths.ToArray())).UseAllAvailableWidth();
+
+            foreach (var group in groupedCategories)
+            {
+                AddHeaderToShoppingListTable(table, group);
+
+                AddContentToShoppingListTable(table, group);
+
+                Cell spaceCell = new Cell(1, totalColumn)
+                    .SetBorder(Border.NO_BORDER)
+                    .SetHeight(16);
+
+                table.AddCell(spaceCell);
+            }
+
+            // Add the table to the document
+            doc.Add(table);
+
+            // Add some space between tables
+            doc.Add(new Paragraph("\n"));
         }
 
-        private static void AddShoppingListPerCategoryTable(Table table, ShoppingListPerCategory shoppingListPerCategory, int column, int maxRows)
+        private static void AddHeaderToShoppingListTable(Table table, List<ShoppingListPerCategory> group)
         {
-            Table categoryTable = new Table(1).UseAllAvailableWidth();
-
-            categoryTable.AddHeaderCell(new Cell().Add(
-                new Paragraph(shoppingListPerCategory.Category.ToUpper())
-                    .SetFont(PdfStyleSettings.TitleFont)
-                    .SetFontSize(14)
-                    .SetFontColor(ColorConstants.WHITE))
-                .SetBorder(Border.NO_BORDER)
-                .SetTextAlignment(TextAlignment.CENTER)
-                .SetBackgroundColor(PdfStyleSettings.ShoppingHeaderCellColor));
-
-            for (int j = 0; j < maxRows; j++)
+            for (int column = 0; column < TotalGroupPerRow; column++)
             {
-                if (j < shoppingListPerCategory.Items.Count)
+                if (column > 0)
                 {
-                    var item = shoppingListPerCategory.Items[j];
+                    table.AddCell(CreateEmptyColumnCell());
+                }
 
-                    Table itemTable = new Table(UnitValue.CreatePercentArray(new float[] { 10f, 88f, 5f })).UseAllAvailableWidth();
+                if (column < group.Count)
+                {
+                    var shoppingListPerCategory = group[column];
 
-                    // Add checkbox
-                    Div checkbox = new Div();
-                    checkbox.SetWidth(10);
-                    checkbox.SetHeight(10);
-                    checkbox.SetBackgroundColor(ColorConstants.WHITE);
-
-                    itemTable.AddCell(new Cell().Add(checkbox)
-                        .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
-                        .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                        .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                        .SetBorder(Border.NO_BORDER)
-                        .SetPaddings(2, 5, 0, 5));
-
-                    var formattedQuantity = FormatQuantity(item.Quantity);
-                    var quantityCell = new Cell().Add(new Paragraph()
-                            .Add($" {formattedQuantity} {item.Unit} {item.Name}")
+                    table.AddCell(new Cell().Add(
+                        new Paragraph(shoppingListPerCategory.Category.ToUpper())
                             .SetFont(PdfStyleSettings.TitleFont)
-                            .SetFontSize(8))
-                        .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                            .SetFontSize(14)
+                            .SetFontColor(ColorConstants.WHITE))
                         .SetBorder(Border.NO_BORDER)
-                        .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor);
-
-                    if (j < maxRows - 1) // dont draw border in last item
-                    {
-                        quantityCell.SetBorderBottom(new SolidBorder(ColorConstants.WHITE, 1));
-                    }
-
-                    itemTable.AddCell(quantityCell);
-
-                    itemTable.AddCell(new Cell()
-                        .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
-                        .SetBorder(Border.NO_BORDER));
-
-                    categoryTable.AddCell(new Cell()
-                        .Add(itemTable)
-                        .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
-                        .SetPadding(0)
-                        .SetBorder(Border.NO_BORDER));
+                        .SetTextAlignment(TextAlignment.CENTER)
+                        .SetBackgroundColor(PdfStyleSettings.ShoppingHeaderCellColor));
                 }
                 else
                 {
-                    categoryTable.AddCell(new Cell()
-                            .SetHeight(17)
-                            .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
-                            .SetBorder(Border.NO_BORDER));
-
+                    table.AddCell(CreateEmptyColumnCell());
                 }
             }
+        }
+
+        private static void AddContentToShoppingListTable(Table table, List<ShoppingListPerCategory> group)
+        {
+            int maxItems = group.Max(category => category.Items.Count);
+
+            for (int row = 0; row < maxItems; row++)
+            {
+                for (int column = 0; column < TotalGroupPerRow; column++)
+                {
+                    if (column > 0)
+                    {
+                        table.AddCell(CreateEmptyColumnCell());
+                    }
+
+                    if (column < group.Count)
+                    {
+                        var shoppingListPerCategory = group[column];
+                        int totalItem = shoppingListPerCategory.Items.Count;
+
+                        if (row < totalItem)
+                        {
+                            var item = shoppingListPerCategory.Items[row];
+
+                            AddShoppingListPerCategoryItemCell(table, item, row < maxItems - 1);
+                        }
+                        else
+                        {
+                            table.AddCell(new Cell()
+                                .SetHeight(17)
+                                .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
+                                .SetBorder(Border.NO_BORDER));
+                        }
+                    }
+                    else
+                    {
+                        table.AddCell(new Cell()
+                            .SetHeight(17)
+                            .SetBorder(Border.NO_BORDER));
+                    }
+                }
+            }
+        }
+
+        private static Cell CreateEmptyColumnCell()
+        {
+            return new Cell()
+                .SetBorder(Border.NO_BORDER)
+                .SetWidth(10);
+        }
+
+        private static void AddShoppingListPerCategoryItemCell(Table table, ShoppingListItem item, bool isSetBorderBottom)
+        {
+            Table itemTable = new Table(UnitValue.CreatePercentArray(new float[] { 10f, 88f, 5f })).UseAllAvailableWidth();
+
+            // Add checkbox
+            Div checkbox = new Div();
+            checkbox.SetWidth(10);
+            checkbox.SetHeight(10);
+            checkbox.SetBackgroundColor(ColorConstants.WHITE);
+
+            // quantity
+            var formattedQuantity = FormatQuantity(item.Quantity);
+            var quantityCell = new Cell().Add(new Paragraph()
+                    .Add($" {formattedQuantity} {item.Unit} {item.Name}")
+                    .SetFont(PdfStyleSettings.TitleFont)
+                    .SetFontSize(8))
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBorder(Border.NO_BORDER)
+                .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor);
+
+            if (isSetBorderBottom)
+            {
+                quantityCell.SetBorderBottom(new SolidBorder(ColorConstants.WHITE, 1));
+            }
+
+            itemTable.AddCell(new Cell().Add(checkbox)
+                .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetBorder(Border.NO_BORDER)
+                .SetPaddings(0, 5, 0, 5));
+
+            itemTable.AddCell(quantityCell);
+
+            itemTable.AddCell(new Cell()
+                .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
+                .SetBorder(Border.NO_BORDER));
 
             table.AddCell(new Cell()
-                .Add(categoryTable)
-                .SetBorder(Border.NO_BORDER)
-                .SetPaddings(0, 0, 0, column > 0 ? 20 : 0));
+                .Add(itemTable)
+                .SetBackgroundColor(PdfStyleSettings.ShoppingCellColor)
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER));
         }
 
         private static string FormatQuantity(double quantity)
