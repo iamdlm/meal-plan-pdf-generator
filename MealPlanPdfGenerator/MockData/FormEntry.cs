@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MealPlanPdfGenerator.Models;
+﻿using MealPlanPdfGenerator.Models;
 
 namespace MealPlanPdfGenerator.MockData
 {
@@ -15,6 +10,8 @@ namespace MealPlanPdfGenerator.MockData
             {
                 Gender = "male",
                 Diet = 1,
+                WeightKg = 55,
+                Height = 170,
                 MealPlan = new MealPlan()
                 {
                     Days = new List<Day>()
@@ -70,7 +67,9 @@ namespace MealPlanPdfGenerator.MockData
                                                 Index = 2,
                                                 Description = "Cook the rice"
                                             }
-                                        }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
                                     },
                                     new Meal()
                                     {
@@ -107,7 +106,9 @@ namespace MealPlanPdfGenerator.MockData
                                                 Index = 2,
                                                 Description = "Cook the rice"
                                             }
-                                        }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
                                     }
                                 },
                                 ShoppingList = new List<ShoppingList>()

@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using MealPlanPdfGenerator.Enums;
+﻿using MealPlanPdfGenerator.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace MealPlanPdfGenerator.Models
 {
@@ -29,5 +29,7 @@ namespace MealPlanPdfGenerator.Models
 
         public List<MealIngredient> Ingredients { get; set; } = new List<MealIngredient>();
         public List<Instruction> Preparation { get; set; } = new List<Instruction>();
+
+        public string Summary { get; set; }
     }
 }

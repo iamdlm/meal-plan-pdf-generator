@@ -1,11 +1,11 @@
-﻿using iText.Kernel.Geom;
+﻿using iText.Kernel.Events;
+using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Layout;
 using MealPlanPdfGenerator.Models;
 using MealPlanPdfGenerator.Pdf.Core;
-using MealPlanPdfGenerator.Pdf.Sections;
 using MealPlanPdfGenerator.Pdf.Events;
-using iText.Kernel.Events;
+using MealPlanPdfGenerator.Pdf.Sections;
 
 namespace MealPlanPdfGenerator.Pdf
 {
@@ -36,16 +36,17 @@ namespace MealPlanPdfGenerator.Pdf
             Document document = new Document(pdfDoc);
 
             // Set font
-            document.SetFont(PdfStyleSettings.TextFont);
-
-            // Fitness assessment
-            FitnessAssessmentWriter.Write(document, form.Age, form.WeightKg, form.Height, form.Activity.ToString());
+            document.SetFont(PdfStyleSettings.BodyFont);
+            document.SetMargins(40, 60, 40, 60);
 
             // Following pages with meal plan details
             MealPlanWriter.Write(pdfDoc, document, form);
 
             // Write the shopping list
             ShoppingListWriter.Write(document, form.MealPlan.ShoppingList);
+
+            // Fitness assessment
+            FitnessAssessmentWriter.Write(pdfDoc, document, form.Age, form.WeightKg, form.Height, form.Activity.ToString());
 
             // Close the document
             document.Close();

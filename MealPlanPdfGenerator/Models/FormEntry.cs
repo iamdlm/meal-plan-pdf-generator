@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using MealPlanPdfGenerator.Enums;
+﻿using MealPlanPdfGenerator.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace MealPlanPdfGenerator.Models
 {
@@ -68,7 +68,7 @@ namespace MealPlanPdfGenerator.Models
         public double WeightKg { get; set; } // in kilograms
 
         [Required]
-        public int Height { get; set; } // in centimeters
+        public int Height { get; set; } // in centimeters        
 
         #endregion
 

@@ -1,4 +1,3 @@
-using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Pdf;
 using iText.Layout;
@@ -15,6 +14,12 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
     {
         public static void WriteRecipe(PdfDocument pdfDoc, Document doc, Meal meal, double dayCalories)
         {
+            // Add title
+            AddTitle(doc, meal);
+
+            // Add recipe information header
+            AddRecipeInformation(pdfDoc, doc, meal);
+
             // Create main content container
             float[] columnWidths = { 1, 1 };
             Table mainContent = new Table(UnitValue.CreatePercentArray(columnWidths));
@@ -25,10 +30,10 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             leftColumn.SetBorder(Border.NO_BORDER);
 
             // Add ingredients
-            AddIngredients(leftColumn, meal);
+            AddIngredients(pdfDoc, leftColumn, meal);
 
             // Add preparation steps
-            AddPreparationSteps(leftColumn, meal);
+            AddPreparationSteps(pdfDoc, leftColumn, meal);
 
             mainContent.AddCell(leftColumn);
 
@@ -36,39 +41,53 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Cell rightColumn = new Cell();
             rightColumn.SetBorder(Border.NO_BORDER);
 
-            // Add recipe image
-            if (!string.IsNullOrEmpty(meal.Image))
-            {
-                byte[] imageBytes = Convert.FromBase64String(meal.Image);
-                ImageData imageData = ImageDataFactory.Create(imageBytes);
-                Image image = new Image(imageData);
-                image.SetWidth(UnitValue.CreatePercentValue(100));
-                rightColumn.Add(image);
-            }
-
             // Add nutrition facts table
             AddNutritionFacts(rightColumn, meal, dayCalories);
 
             mainContent.AddCell(rightColumn);
 
-            // Add recipe information header
-            AddRecipeInformation(pdfDoc, doc, meal);
-
             // Add the main content to the document
             doc.Add(mainContent);
         }
 
-        private static void AddIngredients(Cell container, Meal meal)
+        private static void AddTitle(Document doc, Meal meal)
         {
-            Paragraph header = new Paragraph("Ingredients")
-                .SetFontSize(20)
-                .SetBold()
+            var title = meal.Title;
+            var highlightedTitle = GetHighlightedTitle(title);
+            var nonHighlightedTitle = GetNonHighlightedTitle(title);
+
+            Paragraph header = new Paragraph()
+                .SetFontSize(54)
+                .SetFixedLeading(54)
                 .SetMarginBottom(10);
-            container.Add(header);
+
+            header.Add(new Text(highlightedTitle.ToUpper()).SetFont(PdfStyleSettings.TitleBoldFont));
+            if (!string.IsNullOrEmpty(nonHighlightedTitle))
+            {
+                header.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleFont));
+            }
+
+            doc.Add(header);
+        }
+
+        private static void AddIngredients(PdfDocument pdfDoc, Cell container, Meal meal)
+        {
+            AddSubSectionHeader(pdfDoc, container, "INGREDIENTS");
+
+            // bullet
+            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", "circle.svg"));
+            MemoryStream svgStream = new MemoryStream(svgBytes);
+            Image bulletImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
+            bulletImage.SetHeight(5)
+                .SetWidth(5)
+                .SetMarginBottom(3);
 
             List ingredients = new List()
-                .SetListSymbol("•")
-                .SetSymbolIndent(12)
+                .SetMarginLeft(5)
+                .SetFont(PdfStyleSettings.BodyFont)
+                .SetFontSize(14)
+                .SetListSymbol(bulletImage)
+                .SetSymbolIndent(8)
                 .SetMarginBottom(20);
 
             foreach (var ingredient in meal.Ingredients)
@@ -81,15 +100,14 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             container.Add(ingredients);
         }
 
-        private static void AddPreparationSteps(Cell container, Meal meal)
+        private static void AddPreparationSteps(PdfDocument pdfDoc, Cell container, Meal meal)
         {
-            Paragraph header = new Paragraph("Instructions")
-                .SetFontSize(20)
-                .SetBold()
-                .SetMarginBottom(10);
-            container.Add(header);
+            AddSubSectionHeader(pdfDoc, container, "DIRECTIONS");
 
             List steps = new List(ListNumberingType.DECIMAL)
+                .SetMarginLeft(5)
+                .SetFont(PdfStyleSettings.BodyFont)
+                .SetFontSize(14)
                 .SetSymbolIndent(3)
                 .SetMarginBottom(20);
 
@@ -101,23 +119,40 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             container.Add(steps);
         }
 
+        private static void AddSubSectionHeader(PdfDocument pdfDoc, Cell container, string title)
+        {
+            // bullet
+            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", "bullet.svg"));
+            MemoryStream svgStream = new MemoryStream(svgBytes);
+            Image bulletImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
+            bulletImage.SetHeight(14)
+                .SetWidth(20);
+
+            Paragraph header = new Paragraph()
+                .Add(bulletImage)
+                .Add($" {title}")
+                .SetFont(PdfStyleSettings.TitleFont)
+                .SetFontSize(16)
+                .SetFontColor(PdfStyleSettings.MealTextColor);
+
+            container.Add(header);
+        }
+
         private static void AddRecipeInformation(PdfDocument pdfDoc, Document doc, Meal meal)
         {
             // Create a table with 3 equal columns
             Table infoTable = new Table(UnitValue.CreatePercentArray(new float[] { 1, 1, 1 }));
+            infoTable.SetMarginBottom(14);
             infoTable.SetWidth(UnitValue.CreatePercentValue(100));
 
             // Add thin black borders on top and bottom only
             infoTable.SetBorder(Border.NO_BORDER);
-            infoTable.SetBorderTop(new SolidBorder(ColorConstants.BLACK, 1f));
-            infoTable.SetBorderBottom(new SolidBorder(ColorConstants.BLACK, 1f));
+            infoTable.SetBorderTop(new SolidBorder(PdfStyleSettings.MealDividerTextColor, 1f));
+            infoTable.SetBorderBottom(new SolidBorder(PdfStyleSettings.MealDividerTextColor, 1f));
 
-            // Add margins
-            infoTable.SetMarginBottom(40);
-
-            AddInfoCell(pdfDoc, infoTable, "prep.svg", "Preparation Time", $"{meal.PrepTime} min");
-            AddInfoCell(pdfDoc, infoTable, "cook.svg", "Cook Time", $"{meal.CookTime} min");
-            AddInfoCell(pdfDoc, infoTable, "difficulty.svg", "Difficulty", meal.DifficultyLevel.ToString());
+            AddInfoCell(pdfDoc, infoTable, "prep.svg", "PREP TIME", $"{meal.PrepTime} MIN");
+            AddInfoCell(pdfDoc, infoTable, "cook.svg", "COOK TIME", $"{meal.CookTime} MIN");
+            AddInfoCell(pdfDoc, infoTable, "difficulty.svg", "DIFFICULTY", meal.DifficultyLevel.ToString());
 
             // Add the table to the document
             doc.Add(infoTable);
@@ -127,34 +162,48 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
         {
             Cell cell = new Cell();
             cell.SetBorder(Border.NO_BORDER);
-            cell.SetPadding(10);
+            cell.SetPaddings(10, 0, 10, 0);
             cell.SetTextAlignment(TextAlignment.CENTER);
-            cell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+            cell.SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
             // Add SVG icon
             byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", svgFileName));
             MemoryStream svgStream = new MemoryStream(svgBytes);
             Image svgImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
-            svgImage.SetHeight(20);
-            svgImage.SetWidth(20);
+            svgImage.SetHeight(30);
+            svgImage.SetWidth(30);
             svgImage.SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
-            // Create separate paragraphs for each component
-            Paragraph iconPara = new Paragraph().Add(svgImage);
-            iconPara.SetTextAlignment(TextAlignment.CENTER);
-            iconPara.SetFixedLeading(24);
+            // Create separate paragraphs for each component            
+            Cell iconCell = new Cell()
+                .Add(svgImage)
+                .SetPadding(0)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBorder(Border.NO_BORDER);
 
-            Paragraph labelPara = new Paragraph(label).SetFontSize(10);
-            labelPara.SetTextAlignment(TextAlignment.CENTER);
-            labelPara.SetFixedLeading(14);
+            Paragraph description = new Paragraph()
+                .SetFontSize(12)
+                .SetCharacterSpacing(1f);
+            description.Add(new Text(label)
+                .SetFontColor(PdfStyleSettings.MealTextColor)
+                .SetFont(PdfStyleSettings.TitleBoldFont));
+            description.Add(new Text(" | ")
+                .SetFontColor(PdfStyleSettings.MealTextColor)
+                .SetFont(PdfStyleSettings.TitleFont));
+            description.Add(new Text(value)
+                .SetFont(PdfStyleSettings.TitleFont));
+            Cell descriptionCell = new Cell()
+                .Add(description)
+                .SetPadding(0)
+                .SetTextAlignment(TextAlignment.LEFT)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBorder(Border.NO_BORDER);
 
-            Paragraph valuePara = new Paragraph(value).SetFontSize(12).SetBold();
-            valuePara.SetTextAlignment(TextAlignment.CENTER);
-            valuePara.SetFixedLeading(16);
+            Table mainContent = new Table(UnitValue.CreatePointArray(new float[] { 36f, 140f }));
+            mainContent.AddCell(iconCell);
+            mainContent.AddCell(descriptionCell);
 
-            cell.Add(iconPara);
-            cell.Add(labelPara);
-            cell.Add(valuePara);
+            cell.Add(mainContent);
 
             table.AddCell(cell);
         }
@@ -164,35 +213,15 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             // Create main table with single column
             Table nutritionTable = new Table(1);
             nutritionTable
+                .SetBackgroundColor(PdfStyleSettings.TableColor)
                 .SetWidth(UnitValue.CreatePercentValue(100))
-                .SetBorder(new SolidBorder(ColorConstants.BLACK, 1))
-                .SetMarginTop(40);
+                .SetMarginTop(10);
 
             // Add "Nutrition Facts" header
-            Cell headerCell = new Cell()
-                .Add(new Paragraph("Nutrition Facts")
-                    .SetFontSize(16)
-                    .SetBold()
-                    .SetFontColor(ColorConstants.BLACK))
-                .SetBorder(Border.NO_BORDER)
-                .SetPadding(5);
-            nutritionTable.AddCell(headerCell);
-
-            // Add thick border
-            Cell thickBorder = new Cell()
-                .SetBorder(Border.NO_BORDER)
-                .SetBorderBottom(new SolidBorder(ColorConstants.BLACK, 2))
-                .SetHeight(0);
-            nutritionTable.AddCell(thickBorder);
+            AddNutritionFactsHeader(nutritionTable);
 
             // Add "Amount per serving" row
-            Cell servingCell = new Cell()
-                .Add(new Paragraph("Amount per serving")
-                    .SetFontSize(10)
-                    .SetFontColor(ColorConstants.BLACK))
-                .SetBorder(Border.NO_BORDER)
-                .SetPadding(2);
-            nutritionTable.AddCell(servingCell);
+            AddAmountPerServiceHeader(nutritionTable);
 
             AddCaloriesRow(nutritionTable, meal.Calories);
             AddDailyValueHeader(nutritionTable);
@@ -202,6 +231,34 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             container.Add(nutritionTable);
         }
 
+        private static void AddNutritionFactsHeader(Table table)
+        {
+            Cell headerCell = new Cell()
+                .Add(new Paragraph("Nutrition Facts")
+                    .SetFont(PdfStyleSettings.TitleFont)
+                    .SetFontSize(24)
+                    .SetFixedLeading(20)
+                    .SetFontColor(ColorConstants.BLACK))
+                .SetBorder(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetPadding(10);
+            table.AddCell(headerCell);
+        }
+
+        private static void AddAmountPerServiceHeader(Table table)
+        {
+            Cell servingCell = new Cell()
+                .Add(new Paragraph("Amount per serving")
+                    .SetFont(PdfStyleSettings.TitleFont)
+                    .SetFontSize(10)
+                    .SetFixedLeading(8)
+                    .SetFontColor(ColorConstants.BLACK))
+                .SetBorder(Border.NO_BORDER)
+                .SetBorderLeft(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetBorderRight(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetPaddings(10, 10, 4, 10);
+            table.AddCell(servingCell);
+        }
+
         private static void AddCaloriesRow(Table table, double calories)
         {
             Table caloriesTable = new Table(2);
@@ -209,24 +266,33 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
 
             Cell labelCell = new Cell()
                 .Add(new Paragraph("Calories")
-                    .SetFontSize(14)
+                    .SetFontSize(24)
+                    .SetFixedLeading(20)
+                    .SetFont(PdfStyleSettings.TitleFont)
                     .SetBold())
-                .SetBorder(Border.NO_BORDER);
+                .SetBorder(Border.NO_BORDER)
+                .SetPadding(0);
 
             Cell valueCell = new Cell()
                 .Add(new Paragraph($"{calories:F0}")
-                    .SetFontSize(14)
+                    .SetFontSize(24)
+                    .SetFixedLeading(20)
+                    .SetFont(PdfStyleSettings.TitleFont)
                     .SetBold())
                 .SetBorder(Border.NO_BORDER)
-                .SetTextAlignment(TextAlignment.RIGHT);
+                .SetTextAlignment(TextAlignment.RIGHT)
+                .SetPadding(0);
 
             caloriesTable.AddCell(labelCell);
             caloriesTable.AddCell(valueCell);
 
             Cell container = new Cell()
                 .Add(caloriesTable)
+                .SetPadding(10)
                 .SetBorder(Border.NO_BORDER)
-                .SetBorderBottom(new SolidBorder(ColorConstants.BLACK, 1));
+                .SetBorderBottom(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetBorderLeft(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetBorderRight(new SolidBorder(PdfStyleSettings.MealTextColor, 1));
             table.AddCell(container);
         }
 
@@ -234,39 +300,51 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
         {
             Cell dvHeaderCell = new Cell()
                 .Add(new Paragraph("% Daily Value*")
+                    .SetFont(PdfStyleSettings.BodyFont)
                     .SetTextAlignment(TextAlignment.RIGHT)
-                    .SetFontSize(10))
+                    .SetFontSize(10)
+                    .SetFixedLeading(8))
                 .SetBorder(Border.NO_BORDER)
-                .SetPadding(2);
+                .SetBorderLeft(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetBorderRight(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetPaddings(10, 10, 2, 10);
             table.AddCell(dvHeaderCell);
         }
 
         private static void AddNutrientRows(Table table, Meal meal, double calories)
         {
-            AddNutrientRow(table, "Protein", $"{meal.Protein:F0}g", $"{(((meal.Protein * 4) / calories) * 100):F0}%");
             AddNutrientRow(table, "Total Fat", $"{meal.Fat:F0}g", $"{(((meal.Fat * 9) / calories) * 100):F0}%");
             AddNutrientRow(table, "Total Carbohydrate", $"{meal.Carbs:F0}g", $"{(((meal.Carbs * 4) / calories) * 100):F0}%");
+            AddNutrientRow(table, "Protein", $"{meal.Protein:F0}g", $"{(((meal.Protein * 4) / calories) * 100):F0}%");
         }
 
         private static void AddNutrientRow(Table table, string nutrient, string amount, string dailyValue)
         {
-            Table nutrientTable = new Table(UnitValue.CreatePercentArray(new float[] { 60f, 40f }));
+            Table nutrientTable = new Table(UnitValue.CreatePercentArray(new float[] { 70f, 30f }));
             nutrientTable.SetWidth(UnitValue.CreatePercentValue(100));
 
             Cell nutrientCell = new Cell()
                 .Add(new Paragraph()
                     .Add(new Text(nutrient)
-                        .SetFontSize(10)
-                        .SetBold())
+                        .SetFontSize(18)
+                        .SetFont(PdfStyleSettings.TitleBoldFont))
                     .Add(new Text(" " + amount)
-                        .SetFontSize(10)))
-                .SetBorder(Border.NO_BORDER);
+                        .SetFontSize(12)
+                        .SetFont(PdfStyleSettings.TitleFont))
+                    .SetFixedLeading(15))
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
 
             Cell dvCell = new Cell()
                 .Add(new Paragraph(dailyValue ?? "")
-                    .SetFontSize(10))
+                    .SetFontSize(10)
+                    .SetFont(PdfStyleSettings.BodyFont)
+                    .SetFixedLeading(12))
+                .SetPadding(0)
                 .SetBorder(Border.NO_BORDER)
-                .SetTextAlignment(TextAlignment.RIGHT);
+                .SetTextAlignment(TextAlignment.RIGHT)
+                .SetVerticalAlignment(VerticalAlignment.BOTTOM);
 
             nutrientTable.AddCell(nutrientCell);
             nutrientTable.AddCell(dvCell);
@@ -274,8 +352,10 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Cell container = new Cell()
                 .Add(nutrientTable)
                 .SetBorder(Border.NO_BORDER)
-                .SetBorderBottom(new SolidBorder(ColorConstants.BLACK, 0.5f))
-                .SetPadding(2);
+                .SetBorderBottom(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetBorderLeft(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetBorderRight(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetPadding(10);
 
             table.AddCell(container);
         }
@@ -285,10 +365,38 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Cell footnoteCell = new Cell()
                 .Add(new Paragraph($"* The % Daily Value (DV) tells you how much a nutrient in a serving of this recipe contributes to your daily diet of {2350:N0} calories, which is your recommended daily caloric intake based on your profile.")
                     .SetFontSize(8)
-                    .SetMarginTop(5))
+                    .SetFont(PdfStyleSettings.BodyFont)
+                    .SetFixedLeading(10))
                 .SetBorder(Border.NO_BORDER)
-                .SetPadding(5);
+                .SetBorderBottom(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetBorderLeft(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetBorderRight(new SolidBorder(PdfStyleSettings.MealTextColor, 1))
+                .SetPadding(10);
             table.AddCell(footnoteCell);
         }
+
+        private static string GetHighlightedTitle(string title)
+        {
+            title = title.Trim();
+            var tokens = title.Split(" ");
+            var withIndex = Array.FindIndex(tokens, s => string.Equals(s, "with", StringComparison.OrdinalIgnoreCase));
+            if (withIndex == -1)
+            {
+                withIndex = tokens.Length;
+            }
+            return string.Join(" ", tokens.Take(withIndex).ToArray());
+        }
+
+        private static string GetNonHighlightedTitle(string title)
+        {
+            title = title.Trim();
+            var tokens = title.Split(" ");
+            var withIndex = Array.FindIndex(tokens, s => string.Equals(s, "with", StringComparison.OrdinalIgnoreCase));
+            if (withIndex == -1)
+            {
+                withIndex = tokens.Length;
+            }
+            return string.Join(" ", tokens.Skip(withIndex).Take(tokens.Length - withIndex - 1).ToArray());
+        }
     }
-} 
+}
