@@ -88,17 +88,17 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Table table = new Table(UnitValue.CreatePointArray(new float[] { textWidth, iconWidth }));
             table.SetMarginBottom(20);
 
-            var titleFontSize = 60;
-            var fixedLeading = 60;
+            var titleFontSize = 55;
+            var fixedLeading = 55;
 
             Paragraph titleParagraph = new Paragraph()
-                .SetCharacterSpacing(1)
-                .SetMarginBottom(10);
+                .SetCharacterSpacing(1);
 
             titleParagraph.Add(new Text(highlightedTitle.ToUpper()).SetFont(PdfStyleSettings.TitleFont));
             if (!string.IsNullOrEmpty(nonHighlightedTitle))
             {
-                titleParagraph.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleBoldFont));
+                titleParagraph.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleBoldFont))
+                    .SetMarginBottom(10);
 
                 titleFontSize = 46;
                 fixedLeading = 56;
