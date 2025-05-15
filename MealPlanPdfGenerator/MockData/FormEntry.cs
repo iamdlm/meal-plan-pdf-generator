@@ -29,7 +29,7 @@ namespace MealPlanPdfGenerator.MockData
                                     new Meal()
                                     {
                                         Number = 1,
-                                        Title = "Basmati rice with chicken breast",
+                                        Title = "Oatmeal",
                                         Image = Images.Oatmeal,
                                         PrepTime = 2,
                                         CookTime = 12,
@@ -75,6 +75,45 @@ namespace MealPlanPdfGenerator.MockData
                                     {
                                         Number = 2,
                                         Title = "Basmati rice with chicken breast",
+                                        Image = Images.LentilSoup,
+                                        PrepTime = 2,
+                                        CookTime = 12,
+                                        DifficultyLevel = Enums.DifficultyLevel.Moderate,
+                                        Ingredients = new List<MealIngredient>()
+                                        {
+                                            new MealIngredient()
+                                            {
+                                                Name = "Chicken Breast",
+                                                Quantity = 200,
+                                                Unit = "grams"
+                                            },
+                                            new MealIngredient()
+                                            {
+                                                Name = "Rice",
+                                                Quantity = 100,
+                                                Unit = "grams"
+                                            }
+                                        },
+                                        Preparation = new List<Instruction>()
+                                        {
+                                            new Instruction()
+                                            {
+                                                Index = 1,
+                                                Description = "Cook the chicken"
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 2,
+                                                Description = "Cook the rice"
+                                            }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
+                                    },
+                                    new Meal()
+                                    {
+                                        Number = 3,
+                                        Title = "Basmati rice with chicken breast and vegetables",
                                         Image = Images.LentilSoup,
                                         PrepTime = 2,
                                         CookTime = 12,

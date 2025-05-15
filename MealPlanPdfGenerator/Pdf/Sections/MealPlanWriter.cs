@@ -1,7 +1,5 @@
 using iText.IO.Image;
-using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
-using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
@@ -29,8 +27,6 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             {
                 // Create a new page for each meal
                 PdfFormatUtils.AddSectionBreak(doc);
-
-                AddMealDetailHeader(pdfDoc, doc, meal);
 
                 // Write the recipe using the specialized RecipeWriter
                 RecipeWriter.WriteRecipe(pdfDoc, doc, meal, day.Calories);
@@ -120,6 +116,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections
             Paragraph title = new Paragraph($"{titleNumber} / {meal.Title}")
                 .SetFont(PdfStyleSettings.TitleFont)
                 .SetFontColor(PdfStyleSettings.MealTextColor)
+                .SetFixedLeading(30)
                 .SetFontSize(20);
 
             container.Add(title);
@@ -144,39 +141,6 @@ namespace MealPlanPdfGenerator.Pdf.Sections
                 .SetFontSize(14);
 
             continainer.Add(desc);
-        }
-
-        private static void AddMealDetailHeader(PdfDocument pdfDoc, Document doc, Meal meal)
-        {
-            PageSize pageSize = pdfDoc.GetDefaultPageSize();
-            float pageWidth = pageSize.GetWidth();
-            float pageHeight = pageSize.GetHeight();
-            float leftMargin = doc.GetLeftMargin();
-            float rightMargin = doc.GetRightMargin();
-            float bgHeaderHeight = 180;
-
-            PdfCanvas bgCanvas = new PdfCanvas(pdfDoc, pdfDoc.GetPageNumber(pdfDoc.GetLastPage()));
-            bgCanvas.SaveState()
-                .SetFillColor(PdfStyleSettings.RecipeHeaderColor)
-                .Rectangle(0, pageHeight - bgHeaderHeight, pageWidth, bgHeaderHeight)
-                .Fill()
-                .RestoreState();
-
-            if (meal.Image != null)
-            {
-                float imageContainerWidth = pageWidth - leftMargin - rightMargin;
-                float imageContainerHeight = 210;
-                float containerAspectRatio = imageContainerWidth / imageContainerHeight;
-
-                byte[] imageBytes = Convert.FromBase64String(meal.Image);
-                imageBytes = PdfDrawUtils.CropImageByAspectRatio(imageBytes, containerAspectRatio);
-
-                Image img = new Image(ImageDataFactory.Create(imageBytes))
-                    .SetWidth(UnitValue.CreatePercentValue(100));
-                img.SetMarginBottom(20);
-
-                doc.Add(img);
-            }
         }
     }
 }
