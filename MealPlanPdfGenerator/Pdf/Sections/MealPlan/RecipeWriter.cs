@@ -61,7 +61,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             float pageHeight = pageSize.GetHeight();
             float leftMargin = doc.GetLeftMargin();
             float rightMargin = doc.GetRightMargin();
-            float bgHeaderHeight = 104;
+            float bgHeaderHeight = 89;
 
             PdfCanvas bgCanvas = new PdfCanvas(pdfDoc, pdfDoc.GetPageNumber(pdfDoc.GetLastPage()));
             bgCanvas.SaveState()
@@ -82,40 +82,32 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             var title = meal.Title;
             var highlightedTitle = GetHighlightedTitle(title);
             var nonHighlightedTitle = GetNonHighlightedTitle(title);
-            var iconWidth = 180;
-            var textWidth = pageWidth - iconWidth;
+            var iconWidth = 100;
+            var paddingRightTitle = 10;
+            var textWidth = pageWidth - iconWidth - paddingRightTitle - leftMargin - rightMargin;
 
             Table table = new Table(UnitValue.CreatePointArray(new float[] { textWidth, iconWidth }));
             table.SetMarginBottom(20);
 
-            var titleFontSize = 55;
-            var fixedLeading = 55;
+            var initialFontSize = 50;
+            var titleFontSize = PdfFormatUtils.GetFontSizeByMaxLine(title, initialFontSize, textWidth, 2);
+            var fixedLeading = titleFontSize;
 
             Paragraph titleParagraph = new Paragraph()
-                .SetCharacterSpacing(1);
+                .SetCharacterSpacing(1)
+                .SetFixedLeading(fixedLeading)
+                .SetFontSize(titleFontSize);
 
             titleParagraph.Add(new Text(highlightedTitle.ToUpper()).SetFont(PdfStyleSettings.TitleFont));
             if (!string.IsNullOrEmpty(nonHighlightedTitle))
             {
-                titleParagraph.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleBoldFont))
-                    .SetMarginBottom(10);
-
-                titleFontSize = 46;
-                fixedLeading = 56;
-                var nonHighlightedTitleLine = PdfFormatUtils.CalculateTotalLine(nonHighlightedTitle, titleFontSize, 1, textWidth);
-                if (nonHighlightedTitleLine > 1)
-                {
-                    titleFontSize = 32;
-                    fixedLeading = 34;
-                }
+                titleParagraph.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleBoldFont));
             }
-
-            titleParagraph.SetFontSize(titleFontSize).SetFixedLeading(fixedLeading);
 
             Cell titleCell = new Cell()
                 .Add(titleParagraph)
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                .SetPaddings(10, 0, 0, 0)
+                .SetPaddings(0, paddingRightTitle, 0, 0)
                 .SetBorder(Border.NO_BORDER);
 
             Cell iconCell = new Cell()
@@ -139,7 +131,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             byte[] imageBytes = Convert.FromBase64String(meal.Image);
             Image img = new Image(ImageDataFactory.Create(imageBytes))
                 .SetAutoScale(true)
-                .SetBorderRadius(new BorderRadius(80))
+                .SetBorderRadius(new BorderRadius(50))
                 .SetBorder(new SolidBorder(PdfStyleSettings.IconBorderColor, 2));
 
             container.Add(img);
