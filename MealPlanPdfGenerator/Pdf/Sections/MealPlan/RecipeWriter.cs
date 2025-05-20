@@ -1,5 +1,8 @@
+using iText.IO.Image;
 using iText.Kernel.Colors;
+using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
@@ -14,8 +17,10 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
     {
         public static void WriteRecipe(PdfDocument pdfDoc, Document doc, Meal meal, double dayCalories)
         {
+            AddHeaderBackground(pdfDoc, doc, meal);
+
             // Add title
-            AddTitle(doc, meal);
+            AddTitle(pdfDoc, doc, meal);
 
             // Add recipe information header
             AddRecipeInformation(pdfDoc, doc, meal);
@@ -49,25 +54,87 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             // Add the main content to the document
             doc.Add(mainContent);
         }
-
-        private static void AddTitle(Document doc, Meal meal)
+        private static void AddHeaderBackground(PdfDocument pdfDoc, Document doc, Meal meal)
         {
+            PageSize pageSize = pdfDoc.GetDefaultPageSize();
+            float pageWidth = pageSize.GetWidth();
+            float pageHeight = pageSize.GetHeight();
+            float leftMargin = doc.GetLeftMargin();
+            float rightMargin = doc.GetRightMargin();
+            float bgHeaderHeight = 89;
+
+            PdfCanvas bgCanvas = new PdfCanvas(pdfDoc, pdfDoc.GetPageNumber(pdfDoc.GetLastPage()));
+            bgCanvas.SaveState()
+                .SetFillColor(PdfStyleSettings.RecipeHeaderColor)
+                .Rectangle(0, pageHeight - bgHeaderHeight, pageWidth, bgHeaderHeight)
+                .Fill()
+                .RestoreState();
+        }
+
+        private static void AddTitle(PdfDocument pdfDoc, Document doc, Meal meal)
+        {
+            PageSize pageSize = pdfDoc.GetDefaultPageSize();
+            float pageWidth = pageSize.GetWidth();
+            float pageHeight = pageSize.GetHeight();
+            float leftMargin = doc.GetLeftMargin();
+            float rightMargin = doc.GetRightMargin();
+
             var title = meal.Title;
             var highlightedTitle = GetHighlightedTitle(title);
             var nonHighlightedTitle = GetNonHighlightedTitle(title);
+            var iconWidth = 100;
+            var paddingRightTitle = 10;
+            var textWidth = pageWidth - iconWidth - paddingRightTitle - leftMargin - rightMargin;
 
-            Paragraph header = new Paragraph()
-                .SetFontSize(54)
-                .SetFixedLeading(54)
-                .SetMarginBottom(10);
+            Table table = new Table(UnitValue.CreatePointArray(new float[] { textWidth, iconWidth }));
+            table.SetMarginBottom(20);
 
-            header.Add(new Text(highlightedTitle.ToUpper()).SetFont(PdfStyleSettings.TitleBoldFont));
+            var initialFontSize = 50;
+            var titleFontSize = PdfFormatUtils.GetFontSizeByMaxLine(title, initialFontSize, textWidth, 2);
+            var fixedLeading = titleFontSize;
+
+            Paragraph titleParagraph = new Paragraph()
+                .SetCharacterSpacing(1)
+                .SetFixedLeading(fixedLeading)
+                .SetFontSize(titleFontSize);
+
+            titleParagraph.Add(new Text(highlightedTitle.ToUpper()).SetFont(PdfStyleSettings.TitleFont));
             if (!string.IsNullOrEmpty(nonHighlightedTitle))
             {
-                header.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleFont));
+                titleParagraph.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleBoldFont));
             }
 
-            doc.Add(header);
+            Cell titleCell = new Cell()
+                .Add(titleParagraph)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetPaddings(0, paddingRightTitle, 0, 0)
+                .SetBorder(Border.NO_BORDER);
+
+            Cell iconCell = new Cell()
+                .SetTextAlignment(TextAlignment.RIGHT)
+                .SetHorizontalAlignment(HorizontalAlignment.RIGHT)
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER);
+
+            AddIcon(iconCell, meal);
+
+            table.AddCell(titleCell);
+            table.AddCell(iconCell);
+
+            doc.Add(table);
+        }
+
+        private static void AddIcon(Cell container, Meal meal)
+        {
+            if (string.IsNullOrEmpty(meal.Image)) return;
+
+            byte[] imageBytes = Convert.FromBase64String(meal.Image);
+            Image img = new Image(ImageDataFactory.Create(imageBytes))
+                .SetAutoScale(true)
+                .SetBorderRadius(new BorderRadius(50))
+                .SetBorder(new SolidBorder(PdfStyleSettings.IconBorderColor, 2));
+
+            container.Add(img);
         }
 
         private static void AddIngredients(PdfDocument pdfDoc, Cell container, Meal meal)
@@ -75,7 +142,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             AddSubSectionHeader(pdfDoc, container, "INGREDIENTS");
 
             // bullet
-            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", "circle.svg"));
+            byte[] svgBytes = File.ReadAllBytes(System.IO.Path.Combine("wwwroot", "svg", "circle.svg"));
             MemoryStream svgStream = new MemoryStream(svgBytes);
             Image bulletImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
             bulletImage.SetHeight(5)
@@ -122,7 +189,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
         private static void AddSubSectionHeader(PdfDocument pdfDoc, Cell container, string title)
         {
             // bullet
-            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", "bullet.svg"));
+            byte[] svgBytes = File.ReadAllBytes(System.IO.Path.Combine("wwwroot", "svg", "bullet.svg"));
             MemoryStream svgStream = new MemoryStream(svgBytes);
             Image bulletImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
             bulletImage.SetHeight(14)
@@ -167,7 +234,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             cell.SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
             // Add SVG icon
-            byte[] svgBytes = File.ReadAllBytes(Path.Combine("wwwroot", "svg", svgFileName));
+            byte[] svgBytes = File.ReadAllBytes(System.IO.Path.Combine("wwwroot", "svg", svgFileName));
             MemoryStream svgStream = new MemoryStream(svgBytes);
             Image svgImage = SvgConverter.ConvertToImage(svgStream, pdfDoc);
             svgImage.SetHeight(30);
@@ -396,7 +463,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             {
                 withIndex = tokens.Length;
             }
-            return string.Join(" ", tokens.Skip(withIndex).Take(tokens.Length - withIndex - 1).ToArray());
+            return string.Join(" ", tokens.Skip(withIndex).Take(tokens.Length - withIndex).ToArray());
         }
     }
 }

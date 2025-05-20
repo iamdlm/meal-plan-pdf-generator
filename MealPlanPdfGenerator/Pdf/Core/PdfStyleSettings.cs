@@ -24,6 +24,7 @@ namespace MealPlanPdfGenerator.Pdf.Core
         public static readonly Color ShoppingHeaderCellColor = new DeviceRgb(205, 191, 161);
         public static readonly Color ShoppingCellColor = new DeviceRgb(241, 236, 227);
         public static readonly Color TextWhite = new DeviceRgb(255, 255, 255);
+        public static readonly Color IconBorderColor = new DeviceRgb(213, 200, 175);
 
         // Font Sizes
         public static readonly int HeaderFontSize = 24;

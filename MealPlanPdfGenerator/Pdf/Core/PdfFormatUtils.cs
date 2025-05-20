@@ -90,5 +90,50 @@ namespace MealPlanPdfGenerator.Pdf.Core
         {
             return value.ToString("N0");
         }
+
+        public static int GetFontSizeByMaxLine(string text, int fontSize, float containerWidth, int maxLine)
+        {
+            var tokens = text.Split(" ");
+            int totalLine = 1;
+            int minFontSize = 12;
+            int fontStep = 2;
+            int currentFontSize = fontSize;
+            do
+            {
+                totalLine = CalculateTotalLine(tokens, currentFontSize, containerWidth);
+                currentFontSize -= fontStep;
+            } while (totalLine > maxLine && currentFontSize > minFontSize);
+            return currentFontSize;
+        }
+
+        public static int CalculateTotalLine(string text, int fontSize, float containerWidth)
+        {
+            var tokens = text.Split(" ");
+            return CalculateTotalLine(tokens, fontSize, containerWidth);
+        }
+
+        private static int CalculateTotalLine(string[] tokens, int fontSize, float containerWidth)
+        {
+            int totalLine = 1;
+            float textWidth = 0;
+            int counter = 0;
+            int spacing = 1;
+            foreach (var token in tokens)
+            {
+                if (counter > 0)
+                {
+                    textWidth += spacing;
+                }
+                var tokenLength = token.Length * fontSize * 0.57f;
+                if (textWidth + tokenLength > containerWidth)
+                {
+                    totalLine++;
+
+                }
+                textWidth += tokenLength;
+                counter++;
+            }
+            return totalLine;
+        }
     }
 }
