@@ -26,7 +26,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             AddRecipeInformation(pdfDoc, doc, meal);
 
             // Create main content container
-            float[] columnWidths = { 1, 1 };
+            float[] columnWidths = { 1, 0.1f, 1 };
             Table mainContent = new Table(UnitValue.CreatePercentArray(columnWidths));
             mainContent.SetWidth(UnitValue.CreatePercentValue(100));
 
@@ -34,22 +34,23 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Cell leftColumn = new Cell();
             leftColumn.SetBorder(Border.NO_BORDER);
 
+            // Right column content
+            Cell rightColumn = new Cell();
+            rightColumn.SetBorder(Border.NO_BORDER);
+
+            mainContent.AddCell(leftColumn);
+            mainContent.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+            mainContent.AddCell(rightColumn);
+
             // Add ingredients
             AddIngredients(pdfDoc, leftColumn, meal);
 
             // Add preparation steps
             AddPreparationSteps(pdfDoc, leftColumn, meal);
 
-            mainContent.AddCell(leftColumn);
-
-            // Right column content
-            Cell rightColumn = new Cell();
-            rightColumn.SetBorder(Border.NO_BORDER);
-
             // Add nutrition facts table
             AddNutritionFacts(rightColumn, meal, dayCalories);
 
-            mainContent.AddCell(rightColumn);
 
             // Add the main content to the document
             doc.Add(mainContent);
@@ -362,8 +363,8 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
 
             Cell labelCell = new Cell()
                 .Add(new Paragraph("Calories")
-                    .SetFontSize(24)
-                    .SetFixedLeading(20)
+                    .SetFontSize(22)
+                    .SetFixedLeading(18)
                     .SetFont(PdfStyleSettings.TitleFont)
                     .SetBold())
                 .SetBorder(Border.NO_BORDER)
@@ -371,8 +372,8 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
 
             Cell valueCell = new Cell()
                 .Add(new Paragraph($"{calories:F0}")
-                    .SetFontSize(24)
-                    .SetFixedLeading(20)
+                    .SetFontSize(22)
+                    .SetFixedLeading(18)
                     .SetFont(PdfStyleSettings.TitleFont)
                     .SetBold())
                 .SetBorder(Border.NO_BORDER)
@@ -422,10 +423,10 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Cell nutrientCell = new Cell()
                 .Add(new Paragraph()
                     .Add(new Text(nutrient)
-                        .SetFontSize(18)
+                        .SetFontSize(16)
                         .SetFont(PdfStyleSettings.TitleBoldFont))
                     .Add(new Text(" " + amount)
-                        .SetFontSize(12)
+                        .SetFontSize(10)
                         .SetFont(PdfStyleSettings.TitleFont))
                     .SetFixedLeading(15))
                 .SetPadding(0)

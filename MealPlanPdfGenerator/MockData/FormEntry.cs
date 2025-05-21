@@ -34,6 +34,10 @@ namespace MealPlanPdfGenerator.MockData
                                         PrepTime = 2,
                                         CookTime = 12,
                                         DifficultyLevel = Enums.DifficultyLevel.Easy,
+                                        Carbs = 1000,
+                                        Protein = 1000,
+                                        Fat = 1000,
+                                        Calories = 2000,
                                         Ingredients = new List<MealIngredient>()
                                         {
                                             new MealIngredient()
@@ -60,12 +64,22 @@ namespace MealPlanPdfGenerator.MockData
                                             new Instruction()
                                             {
                                                 Index = 1,
-                                                Description = "Cook the chicken"
+                                                Description = "Season the chicken breasts with salt and pepper."
                                             },
                                             new Instruction()
                                             {
                                                 Index = 2,
-                                                Description = "Cook the rice"
+                                                Description = "Heat olive oil in a skillet over medium heat."
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 3,
+                                                Description = "Add the chicken and cook for 5–6 minutes on each side, or until golden and cooked through."
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 4,
+                                                Description = "Remove chicken and set aside."
                                             }
                                         },
                                         Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
