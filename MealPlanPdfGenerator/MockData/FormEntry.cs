@@ -231,7 +231,7 @@ namespace MealPlanPdfGenerator.MockData
                                     {
                                         Number = 6,
                                         Title = "Turkey and Avocado Wrap",
-                                        Image = Images.LentilSoup,
+                                        Image = Images.Wrap,
                                         PrepTime = 2,
                                         CookTime = 12,
                                         DifficultyLevel = Enums.DifficultyLevel.Moderate,
@@ -270,7 +270,7 @@ namespace MealPlanPdfGenerator.MockData
                                     {
                                         Number = 7,
                                         Title = "Celery Sticks with Peanut Butter",
-                                        Image = Images.LentilSoup,
+                                        Image = Images.Wrap,
                                         PrepTime = 2,
                                         CookTime = 12,
                                         DifficultyLevel = Enums.DifficultyLevel.Moderate,
