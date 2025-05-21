@@ -26,7 +26,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             AddRecipeInformation(pdfDoc, doc, meal);
 
             // Create main content container
-            float[] columnWidths = { 1, 1 };
+            float[] columnWidths = { 1, 0.1f, 1 };
             Table mainContent = new Table(UnitValue.CreatePercentArray(columnWidths));
             mainContent.SetWidth(UnitValue.CreatePercentValue(100));
 
@@ -34,22 +34,23 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Cell leftColumn = new Cell();
             leftColumn.SetBorder(Border.NO_BORDER);
 
+            // Right column content
+            Cell rightColumn = new Cell();
+            rightColumn.SetBorder(Border.NO_BORDER);
+
+            mainContent.AddCell(leftColumn);
+            mainContent.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+            mainContent.AddCell(rightColumn);
+
             // Add ingredients
             AddIngredients(pdfDoc, leftColumn, meal);
 
             // Add preparation steps
             AddPreparationSteps(pdfDoc, leftColumn, meal);
 
-            mainContent.AddCell(leftColumn);
-
-            // Right column content
-            Cell rightColumn = new Cell();
-            rightColumn.SetBorder(Border.NO_BORDER);
-
             // Add nutrition facts table
             AddNutritionFacts(rightColumn, meal, dayCalories);
 
-            mainContent.AddCell(rightColumn);
 
             // Add the main content to the document
             doc.Add(mainContent);
@@ -79,9 +80,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             float leftMargin = doc.GetLeftMargin();
             float rightMargin = doc.GetRightMargin();
 
-            var title = meal.Title;
-            var highlightedTitle = GetHighlightedTitle(title);
-            var nonHighlightedTitle = GetNonHighlightedTitle(title);
+            var firstLineTitle = meal.Title;
             var iconWidth = 100;
             var paddingRightTitle = 10;
             var textWidth = pageWidth - iconWidth - paddingRightTitle - leftMargin - rightMargin;
@@ -89,48 +88,79 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Table table = new Table(UnitValue.CreatePointArray(new float[] { textWidth, iconWidth }));
             table.SetMarginBottom(20);
 
-            var initialFontSize = 50;
-            var titleFontSize = PdfFormatUtils.GetFontSizeByMaxLine(title, initialFontSize, textWidth, 2);
+            var titleFontSize = 32;
             var fixedLeading = titleFontSize;
+            var totalLine = PdfFormatUtils.CalculateTotalLine(firstLineTitle, titleFontSize, textWidth);
 
-            Paragraph titleParagraph = new Paragraph()
+            Paragraph firstLineTitleParagraph = new Paragraph()
                 .SetCharacterSpacing(1)
-                .SetFixedLeading(fixedLeading)
+                .SetFixedLeading(38)
+                .SetFont(PdfStyleSettings.TitleFont)
                 .SetFontSize(titleFontSize);
+            Paragraph? secondLineTitleParagraph = null;
 
-            titleParagraph.Add(new Text(highlightedTitle.ToUpper()).SetFont(PdfStyleSettings.TitleFont));
-            if (!string.IsNullOrEmpty(nonHighlightedTitle))
-            {
-                titleParagraph.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleBoldFont));
-            }
-
-            Cell titleCell = new Cell()
-                .Add(titleParagraph)
-                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+            Cell firstLineTitleCell = new Cell()
+                .Add(firstLineTitleParagraph)
                 .SetPaddings(0, paddingRightTitle, 0, 0)
                 .SetBorder(Border.NO_BORDER);
 
-            Cell iconCell = new Cell()
+            if (totalLine == 1)
+            {
+                firstLineTitleCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+                firstLineTitleParagraph.Add(new Text(firstLineTitle.ToUpper()));
+            }
+            else
+            {
+                var splittedTitle = PdfFormatUtils.SplitTitle(firstLineTitle, titleFontSize);
+
+                firstLineTitleParagraph.Add(splittedTitle.FirstLine.ToUpper());
+
+                firstLineTitleCell
+                    .SetHeight(50)
+                    .SetVerticalAlignment(VerticalAlignment.BOTTOM);
+
+                secondLineTitleParagraph = new Paragraph(splittedTitle.SecondLine.ToUpper())
+                    .SetCharacterSpacing(1)
+                    .SetFont(PdfStyleSettings.TitleBoldFont)
+                    .SetFixedLeading(fixedLeading)
+                    .SetFontSize(titleFontSize);
+            }
+
+            Cell iconCell = new Cell(Math.Min(totalLine, 2), 1)
                 .SetTextAlignment(TextAlignment.RIGHT)
                 .SetHorizontalAlignment(HorizontalAlignment.RIGHT)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                 .SetPadding(0)
                 .SetBorder(Border.NO_BORDER);
 
-            AddIcon(iconCell, meal);
+            AddIcon(iconCell, meal, iconWidth);
 
-            table.AddCell(titleCell);
+            table.AddCell(firstLineTitleCell);
             table.AddCell(iconCell);
+
+            if (secondLineTitleParagraph != null)
+            {
+                Cell secondLineTitleCell = new Cell()
+                    .Add(secondLineTitleParagraph)
+                    .SetVerticalAlignment(VerticalAlignment.TOP)
+                    .SetPaddings(4, paddingRightTitle, 0, 0)
+                    .SetBorder(Border.NO_BORDER);
+
+                table.AddCell(secondLineTitleCell);
+            }
+
 
             doc.Add(table);
         }
 
-        private static void AddIcon(Cell container, Meal meal)
+        private static void AddIcon(Cell container, Meal meal, float iconWidth)
         {
             if (string.IsNullOrEmpty(meal.Image)) return;
 
             byte[] imageBytes = Convert.FromBase64String(meal.Image);
             Image img = new Image(ImageDataFactory.Create(imageBytes))
-                .SetAutoScale(true)
+                .SetWidth(iconWidth)
                 .SetBorderRadius(new BorderRadius(50))
                 .SetBorder(new SolidBorder(PdfStyleSettings.IconBorderColor, 2));
 
@@ -333,8 +363,8 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
 
             Cell labelCell = new Cell()
                 .Add(new Paragraph("Calories")
-                    .SetFontSize(24)
-                    .SetFixedLeading(20)
+                    .SetFontSize(22)
+                    .SetFixedLeading(18)
                     .SetFont(PdfStyleSettings.TitleFont)
                     .SetBold())
                 .SetBorder(Border.NO_BORDER)
@@ -342,8 +372,8 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
 
             Cell valueCell = new Cell()
                 .Add(new Paragraph($"{calories:F0}")
-                    .SetFontSize(24)
-                    .SetFixedLeading(20)
+                    .SetFontSize(22)
+                    .SetFixedLeading(18)
                     .SetFont(PdfStyleSettings.TitleFont)
                     .SetBold())
                 .SetBorder(Border.NO_BORDER)
@@ -393,10 +423,10 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Cell nutrientCell = new Cell()
                 .Add(new Paragraph()
                     .Add(new Text(nutrient)
-                        .SetFontSize(18)
+                        .SetFontSize(16)
                         .SetFont(PdfStyleSettings.TitleBoldFont))
                     .Add(new Text(" " + amount)
-                        .SetFontSize(12)
+                        .SetFontSize(10)
                         .SetFont(PdfStyleSettings.TitleFont))
                     .SetFixedLeading(15))
                 .SetPadding(0)

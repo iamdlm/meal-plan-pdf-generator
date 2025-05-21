@@ -34,6 +34,10 @@ namespace MealPlanPdfGenerator.MockData
                                         PrepTime = 2,
                                         CookTime = 12,
                                         DifficultyLevel = Enums.DifficultyLevel.Easy,
+                                        Carbs = 1000,
+                                        Protein = 1000,
+                                        Fat = 1000,
+                                        Calories = 2000,
                                         Ingredients = new List<MealIngredient>()
                                         {
                                             new MealIngredient()
@@ -60,12 +64,22 @@ namespace MealPlanPdfGenerator.MockData
                                             new Instruction()
                                             {
                                                 Index = 1,
-                                                Description = "Cook the chicken"
+                                                Description = "Season the chicken breasts with salt and pepper."
                                             },
                                             new Instruction()
                                             {
                                                 Index = 2,
-                                                Description = "Cook the rice"
+                                                Description = "Heat olive oil in a skillet over medium heat."
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 3,
+                                                Description = "Add the chicken and cook for 5–6 minutes on each side, or until golden and cooked through."
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 4,
+                                                Description = "Remove chicken and set aside."
                                             }
                                         },
                                         Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
@@ -148,7 +162,241 @@ namespace MealPlanPdfGenerator.MockData
                                         },
                                         Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
                                             "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
-                                    }
+                                    },
+                                    new Meal()
+                                    {
+                                        Number = 4,
+                                        Title = "Smoothie Bowl",
+                                        Image = Images.LentilSoup,
+                                        PrepTime = 2,
+                                        CookTime = 12,
+                                        DifficultyLevel = Enums.DifficultyLevel.Moderate,
+                                        Ingredients = new List<MealIngredient>()
+                                        {
+                                            new MealIngredient()
+                                            {
+                                                Name = "Chicken Breast",
+                                                Quantity = 200,
+                                                Unit = "grams"
+                                            },
+                                            new MealIngredient()
+                                            {
+                                                Name = "Rice",
+                                                Quantity = 100,
+                                                Unit = "grams"
+                                            }
+                                        },
+                                        Preparation = new List<Instruction>()
+                                        {
+                                            new Instruction()
+                                            {
+                                                Index = 1,
+                                                Description = "Cook the chicken"
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 2,
+                                                Description = "Cook the rice"
+                                            }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
+                                    },
+                                    new Meal()
+                                    {
+                                        Number = 5,
+                                        Title = "Oatmeal with Berries",
+                                        Image = Images.OrangeSlices,
+                                        PrepTime = 2,
+                                        CookTime = 12,
+                                        DifficultyLevel = Enums.DifficultyLevel.Moderate,
+                                        Ingredients = new List<MealIngredient>()
+                                        {
+                                            new MealIngredient()
+                                            {
+                                                Name = "Chicken Breast",
+                                                Quantity = 200,
+                                                Unit = "grams"
+                                            },
+                                            new MealIngredient()
+                                            {
+                                                Name = "Rice",
+                                                Quantity = 100,
+                                                Unit = "grams"
+                                            }
+                                        },
+                                        Preparation = new List<Instruction>()
+                                        {
+                                            new Instruction()
+                                            {
+                                                Index = 1,
+                                                Description = "Cook the chicken"
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 2,
+                                                Description = "Cook the rice"
+                                            }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
+                                    },
+                                    new Meal()
+                                    {
+                                        Number = 6,
+                                        Title = "Turkey and Avocado Wrap",
+                                        Image = Images.Wrap,
+                                        PrepTime = 2,
+                                        CookTime = 12,
+                                        DifficultyLevel = Enums.DifficultyLevel.Moderate,
+                                        Ingredients = new List<MealIngredient>()
+                                        {
+                                            new MealIngredient()
+                                            {
+                                                Name = "Chicken Breast",
+                                                Quantity = 200,
+                                                Unit = "grams"
+                                            },
+                                            new MealIngredient()
+                                            {
+                                                Name = "Rice",
+                                                Quantity = 100,
+                                                Unit = "grams"
+                                            }
+                                        },
+                                        Preparation = new List<Instruction>()
+                                        {
+                                            new Instruction()
+                                            {
+                                                Index = 1,
+                                                Description = "Cook the chicken"
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 2,
+                                                Description = "Cook the rice"
+                                            }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
+                                    },
+                                    new Meal()
+                                    {
+                                        Number = 7,
+                                        Title = "Celery Sticks with Peanut Butter",
+                                        Image = Images.Wrap,
+                                        PrepTime = 2,
+                                        CookTime = 12,
+                                        DifficultyLevel = Enums.DifficultyLevel.Moderate,
+                                        Ingredients = new List<MealIngredient>()
+                                        {
+                                            new MealIngredient()
+                                            {
+                                                Name = "Chicken Breast",
+                                                Quantity = 200,
+                                                Unit = "grams"
+                                            },
+                                            new MealIngredient()
+                                            {
+                                                Name = "Rice",
+                                                Quantity = 100,
+                                                Unit = "grams"
+                                            }
+                                        },
+                                        Preparation = new List<Instruction>()
+                                        {
+                                            new Instruction()
+                                            {
+                                                Index = 1,
+                                                Description = "Cook the chicken"
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 2,
+                                                Description = "Cook the rice"
+                                            }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
+                                    },
+                                    new Meal()
+                                    {
+                                        Number = 8,
+                                        Title = "Smoothie Bowl with Banana and Spinach",
+                                        Image = Images.LentilSoup,
+                                        PrepTime = 2,
+                                        CookTime = 12,
+                                        DifficultyLevel = Enums.DifficultyLevel.Moderate,
+                                        Ingredients = new List<MealIngredient>()
+                                        {
+                                            new MealIngredient()
+                                            {
+                                                Name = "Chicken Breast",
+                                                Quantity = 200,
+                                                Unit = "grams"
+                                            },
+                                            new MealIngredient()
+                                            {
+                                                Name = "Rice",
+                                                Quantity = 100,
+                                                Unit = "grams"
+                                            }
+                                        },
+                                        Preparation = new List<Instruction>()
+                                        {
+                                            new Instruction()
+                                            {
+                                                Index = 1,
+                                                Description = "Cook the chicken"
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 2,
+                                                Description = "Cook the rice"
+                                            }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
+                                    },
+                                    new Meal()
+                                    {
+                                        Number = 9,
+                                        Title = "Chickpea Salad with Cucumber and Tomato",
+                                        Image = Images.OrangeSlices,
+                                        PrepTime = 2,
+                                        CookTime = 12,
+                                        DifficultyLevel = Enums.DifficultyLevel.Moderate,
+                                        Ingredients = new List<MealIngredient>()
+                                        {
+                                            new MealIngredient()
+                                            {
+                                                Name = "Chicken Breast",
+                                                Quantity = 200,
+                                                Unit = "grams"
+                                            },
+                                            new MealIngredient()
+                                            {
+                                                Name = "Rice",
+                                                Quantity = 100,
+                                                Unit = "grams"
+                                            }
+                                        },
+                                        Preparation = new List<Instruction>()
+                                        {
+                                            new Instruction()
+                                            {
+                                                Index = 1,
+                                                Description = "Cook the chicken"
+                                            },
+                                            new Instruction()
+                                            {
+                                                Index = 2,
+                                                Description = "Cook the rice"
+                                            }
+                                        },
+                                        Summary = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                            "Nullam ultricies fringilla rutrum. Cras ultricies tellus in lacus mollis lorem ipsum sit amet consectetur."
+                                    },
                                 },
                                 ShoppingList = new List<ShoppingList>()
                                 {
