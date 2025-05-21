@@ -3,6 +3,7 @@ using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using MealPlanPdfGenerator.Pdf.ViewModels;
 
 namespace MealPlanPdfGenerator.Pdf.Core
 {
@@ -134,6 +135,39 @@ namespace MealPlanPdfGenerator.Pdf.Core
                 counter++;
             }
             return totalLine;
+        }
+
+        public static SplitTitleViewModel SplitTitle(string text, int fontSize)
+        {
+            var tokens = text.Split(" ");
+            int middleIndex = tokens.Length / 2;
+
+            var firstOptionSplittedTitle = new SplitTitleViewModel
+            {
+                FirstLine = string.Join(" ", tokens.Take(middleIndex)),
+                SecondLine = string.Join(" ", tokens.Skip(middleIndex).Take(tokens.Length - middleIndex))
+            };
+
+            if (tokens.Length % 2 == 0)
+            {
+                return firstOptionSplittedTitle;
+            }
+            middleIndex += 1;
+            var secondOptionSplittedTitle = new SplitTitleViewModel
+            {
+                FirstLine = string.Join(" ", tokens.Take(middleIndex)),
+                SecondLine = string.Join(" ", tokens.Skip(middleIndex).Take(tokens.Length - middleIndex))
+            };
+
+            return CalculateAverageSplitTitle(firstOptionSplittedTitle) < CalculateAverageSplitTitle(secondOptionSplittedTitle) ?
+                firstOptionSplittedTitle : secondOptionSplittedTitle;
+        }
+
+        private static float CalculateAverageSplitTitle(SplitTitleViewModel splittedTitle)
+        {
+            var firstLineTextWidth = splittedTitle.FirstLine.Length;
+            var secondLineTextWidth = splittedTitle.SecondLine.Length;
+            return (firstLineTextWidth + secondLineTextWidth) / 2;
         }
     }
 }

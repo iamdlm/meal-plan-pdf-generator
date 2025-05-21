@@ -79,9 +79,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             float leftMargin = doc.GetLeftMargin();
             float rightMargin = doc.GetRightMargin();
 
-            var title = meal.Title;
-            var highlightedTitle = GetHighlightedTitle(title);
-            var nonHighlightedTitle = GetNonHighlightedTitle(title);
+            var firstLineTitle = meal.Title;
             var iconWidth = 100;
             var paddingRightTitle = 10;
             var textWidth = pageWidth - iconWidth - paddingRightTitle - leftMargin - rightMargin;
@@ -89,37 +87,68 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             Table table = new Table(UnitValue.CreatePointArray(new float[] { textWidth, iconWidth }));
             table.SetMarginBottom(20);
 
-            var initialFontSize = 50;
-            var titleFontSize = PdfFormatUtils.GetFontSizeByMaxLine(title, initialFontSize, textWidth, 2);
+            var titleFontSize = 32;
             var fixedLeading = titleFontSize;
+            var totalLine = PdfFormatUtils.CalculateTotalLine(firstLineTitle, titleFontSize, textWidth);
 
-            Paragraph titleParagraph = new Paragraph()
+            Paragraph firstLineTitleParagraph = new Paragraph()
                 .SetCharacterSpacing(1)
-                .SetFixedLeading(fixedLeading)
+                .SetFixedLeading(38)
+                .SetFont(PdfStyleSettings.TitleFont)
                 .SetFontSize(titleFontSize);
+            Paragraph? secondLineTitleParagraph = null;
 
-            titleParagraph.Add(new Text(highlightedTitle.ToUpper()).SetFont(PdfStyleSettings.TitleFont));
-            if (!string.IsNullOrEmpty(nonHighlightedTitle))
-            {
-                titleParagraph.Add(new Text($" {nonHighlightedTitle.ToUpper()}").SetFont(PdfStyleSettings.TitleBoldFont));
-            }
-
-            Cell titleCell = new Cell()
-                .Add(titleParagraph)
-                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+            Cell firstLineTitleCell = new Cell()
+                .Add(firstLineTitleParagraph)
                 .SetPaddings(0, paddingRightTitle, 0, 0)
                 .SetBorder(Border.NO_BORDER);
 
-            Cell iconCell = new Cell()
+            if (totalLine == 1)
+            {
+                firstLineTitleCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+                firstLineTitleParagraph.Add(new Text(firstLineTitle.ToUpper()));
+            }
+            else
+            {
+                var splittedTitle = PdfFormatUtils.SplitTitle(firstLineTitle, titleFontSize);
+
+                firstLineTitleParagraph.Add(splittedTitle.FirstLine.ToUpper());
+
+                firstLineTitleCell
+                    .SetHeight(50)
+                    .SetVerticalAlignment(VerticalAlignment.BOTTOM);
+
+                secondLineTitleParagraph = new Paragraph(splittedTitle.SecondLine.ToUpper())
+                    .SetCharacterSpacing(1)
+                    .SetFont(PdfStyleSettings.TitleBoldFont)
+                    .SetFixedLeading(fixedLeading)
+                    .SetFontSize(titleFontSize);
+            }
+
+            Cell iconCell = new Cell(Math.Min(totalLine, 2), 1)
                 .SetTextAlignment(TextAlignment.RIGHT)
                 .SetHorizontalAlignment(HorizontalAlignment.RIGHT)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                 .SetPadding(0)
                 .SetBorder(Border.NO_BORDER);
 
             AddIcon(iconCell, meal, iconWidth);
 
-            table.AddCell(titleCell);
+            table.AddCell(firstLineTitleCell);
             table.AddCell(iconCell);
+
+            if (secondLineTitleParagraph != null)
+            {
+                Cell secondLineTitleCell = new Cell()
+                    .Add(secondLineTitleParagraph)
+                    .SetVerticalAlignment(VerticalAlignment.TOP)
+                    .SetPaddings(4, paddingRightTitle, 0, 0)
+                    .SetBorder(Border.NO_BORDER);
+
+                table.AddCell(secondLineTitleCell);
+            }
+
 
             doc.Add(table);
         }
