@@ -102,8 +102,8 @@ namespace MealPlanPdfGenerator.Pdf.Sections
 
             byte[] imageBytes = Convert.FromBase64String(meal.Image);
             Image img = new Image(ImageDataFactory.Create(imageBytes))
+                .SetWidth(100)
                 .SetMarginRight(10)
-                .SetAutoScale(true)
                 .SetBorderRadius(new BorderRadius(50));
 
             container.Add(img);

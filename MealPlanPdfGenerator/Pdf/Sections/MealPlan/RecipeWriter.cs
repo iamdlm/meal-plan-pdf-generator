@@ -116,7 +116,7 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
                 .SetPadding(0)
                 .SetBorder(Border.NO_BORDER);
 
-            AddIcon(iconCell, meal);
+            AddIcon(iconCell, meal, iconWidth);
 
             table.AddCell(titleCell);
             table.AddCell(iconCell);
@@ -124,13 +124,13 @@ namespace MealPlanPdfGenerator.Pdf.Sections.MealPlan
             doc.Add(table);
         }
 
-        private static void AddIcon(Cell container, Meal meal)
+        private static void AddIcon(Cell container, Meal meal, float iconWidth)
         {
             if (string.IsNullOrEmpty(meal.Image)) return;
 
             byte[] imageBytes = Convert.FromBase64String(meal.Image);
             Image img = new Image(ImageDataFactory.Create(imageBytes))
-                .SetAutoScale(true)
+                .SetWidth(iconWidth)
                 .SetBorderRadius(new BorderRadius(50))
                 .SetBorder(new SolidBorder(PdfStyleSettings.IconBorderColor, 2));
 
